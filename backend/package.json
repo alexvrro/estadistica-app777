@@ -1,0 +1,22 @@
+{
+  "name": "estadistica-backend",
+  "version": "1.0.0",
+  "description": "API de Estadística I: tabla de frecuencias para datos agrupados + tutor de IA",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "configurar": "node scripts/configurar.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20.19"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0",
+    "mysql2": "^3.11.0"
+  }
+}

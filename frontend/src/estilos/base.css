@@ -1,0 +1,276 @@
+/* ==========================================================================
+   Base: variables de diseño (tema claro y oscuro), reinicio y tipografía
+   ========================================================================== */
+
+:root {
+  color-scheme: light;
+
+  --fuente: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --fuente-mono: "Geist Mono", ui-monospace, "Cascadia Code", monospace;
+
+  --radio-xl: 20px;
+  --radio-l: 14px;
+  --radio-m: 10px;
+  --radio-s: 7px;
+  --transicion: 160ms cubic-bezier(0.2, 0.7, 0.3, 1);
+  --ancho-lateral: 248px;
+  --alto-barra: 64px;
+
+  /* Superficies y texto */
+  --fondo: #f3f4f8;
+  --superficie: #ffffff;
+  --superficie-2: #f7f8fb;
+  --superficie-3: #eef0f5;
+  --borde: #e4e7ee;
+  --borde-fuerte: #d3d8e2;
+  --texto: #101323;
+  --texto-2: #475069;
+  --texto-3: #6b7287;
+
+  /* Acento índigo → violeta */
+  --acento: #5b5bd6;
+  --acento-hover: #4a4ac4;
+  --acento-suave: #eeeefe;
+  --acento-texto: #4343b8;
+  --acento-2: #9b5de5;
+  --sobre-acento: #ffffff;
+
+  /* Estados */
+  --exito: #15803d;
+  --exito-suave: #e7f6ec;
+  --aviso: #a16207;
+  --aviso-suave: #fdf5e1;
+  --error: #c53030;
+  --error-suave: #fdecec;
+
+  /* Gráfica (paleta validada para daltonismo sobre #ffffff) */
+  --graf-datos: #5b5bd6;
+  --graf-datos-fuerte: #4040b8;
+  --graf-media: #e03131;
+  --graf-mediana: #0c9a78;
+  --graf-moda: #d9a400;
+  --graf-rejilla: #eceef3;
+  --graf-eje: #cfd4de;
+
+  --sombra-1: 0 1px 2px rgb(16 24 40 / 0.05);
+  --sombra-2: 0 1px 2px rgb(16 24 40 / 0.04), 0 8px 24px -8px rgb(16 24 40 / 0.1);
+  --sombra-3: 0 24px 64px -12px rgb(16 24 40 / 0.28);
+  --halo: radial-gradient(60rem 28rem at 12% -10%, rgb(91 91 214 / 0.12), transparent 70%),
+    radial-gradient(40rem 24rem at 95% 0%, rgb(155 93 229 / 0.1), transparent 70%);
+}
+
+/* Tema oscuro: por preferencia del sistema o elegido con el botón */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --fondo: #0b0d14;
+    --superficie: #131620;
+    --superficie-2: #181c28;
+    --superficie-3: #1f2433;
+    --borde: #242a39;
+    --borde-fuerte: #333a4c;
+    --texto: #eef0f7;
+    --texto-2: #b3b9ca;
+    --texto-3: #8a91a6;
+    --acento: #7c7cf0;
+    --acento-hover: #9494f6;
+    --acento-suave: #1f2147;
+    --acento-texto: #a9abff;
+    --acento-2: #b07cf0;
+    --sobre-acento: #0b0d14;
+    --exito: #4ade80;
+    --exito-suave: #12291c;
+    --aviso: #fbbf24;
+    --aviso-suave: #2a2210;
+    --error: #f87171;
+    --error-suave: #2d1515;
+    --graf-datos: #7c7cf0;
+    --graf-datos-fuerte: #a3a3ff;
+    --graf-media: #c92a2a;
+    --graf-mediana: #12a383;
+    --graf-moda: #b88a00;
+    --graf-rejilla: #1e2330;
+    --graf-eje: #333a4c;
+    --sombra-1: 0 1px 2px rgb(0 0 0 / 0.3);
+    --sombra-2: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px -8px rgb(0 0 0 / 0.5);
+    --sombra-3: 0 24px 64px -12px rgb(0 0 0 / 0.7);
+    --halo: radial-gradient(60rem 28rem at 12% -10%, rgb(124 124 240 / 0.14), transparent 70%),
+      radial-gradient(40rem 24rem at 95% 0%, rgb(176 124 240 / 0.1), transparent 70%);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --fondo: #0b0d14;
+  --superficie: #131620;
+  --superficie-2: #181c28;
+  --superficie-3: #1f2433;
+  --borde: #242a39;
+  --borde-fuerte: #333a4c;
+  --texto: #eef0f7;
+  --texto-2: #b3b9ca;
+  --texto-3: #8a91a6;
+  --acento: #7c7cf0;
+  --acento-hover: #9494f6;
+  --acento-suave: #1f2147;
+  --acento-texto: #a9abff;
+  --acento-2: #b07cf0;
+  --sobre-acento: #0b0d14;
+  --exito: #4ade80;
+  --exito-suave: #12291c;
+  --aviso: #fbbf24;
+  --aviso-suave: #2a2210;
+  --error: #f87171;
+  --error-suave: #2d1515;
+  --graf-datos: #7c7cf0;
+  --graf-datos-fuerte: #a3a3ff;
+  --graf-media: #c92a2a;
+  --graf-mediana: #12a383;
+  --graf-moda: #b88a00;
+  --graf-rejilla: #1e2330;
+  --graf-eje: #333a4c;
+  --sombra-1: 0 1px 2px rgb(0 0 0 / 0.3);
+  --sombra-2: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px -8px rgb(0 0 0 / 0.5);
+  --sombra-3: 0 24px 64px -12px rgb(0 0 0 / 0.7);
+  --halo: radial-gradient(60rem 28rem at 12% -10%, rgb(124 124 240 / 0.14), transparent 70%),
+    radial-gradient(40rem 24rem at 95% 0%, rgb(176 124 240 / 0.1), transparent 70%);
+}
+
+/* --- Reinicio mínimo ------------------------------------------------------ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  scrollbar-color: var(--borde-fuerte) transparent;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--halo), var(--fondo);
+  background-attachment: fixed;
+  color: var(--texto);
+  font-family: var(--fuente);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+svg {
+  display: block;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--acento) 28%, transparent);
+}
+
+:where(button, a, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--acento);
+  outline-offset: 2px;
+}
+
+/* --- Utilidades ----------------------------------------------------------- */
+
+.num {
+  font-family: var(--fuente-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.fuente-sans {
+  font-family: var(--fuente);
+}
+
+.visualmente-oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.scroll-fino::-webkit-scrollbar,
+textarea::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scroll-fino::-webkit-scrollbar-thumb,
+textarea::-webkit-scrollbar-thumb {
+  background: var(--borde-fuerte);
+  border-radius: 8px;
+}
+
+.sin-barra {
+  scrollbar-width: none;
+}
+
+.sin-barra::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.aparecer {
+  animation: aparecer 0.4s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+@keyframes pulso {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .aparecer {
+    animation: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0s !important;
+  }
+}

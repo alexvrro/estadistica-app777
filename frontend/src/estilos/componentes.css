@@ -1,0 +1,413 @@
+/* ==========================================================================
+   Componentes reutilizables: tarjeta, botones, campos, chips, tablas, avisos
+   ========================================================================== */
+
+/* --- Tarjeta ---------------------------------------------------------------- */
+
+.tarjeta {
+  min-width: 0;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-xl);
+  background: var(--superficie);
+  box-shadow: var(--sombra-2);
+  scroll-margin-top: calc(var(--alto-barra) + 64px);
+  outline: none;
+  transition: box-shadow var(--transicion), border-color var(--transicion);
+}
+
+.tarjeta:focus {
+  border-color: color-mix(in srgb, var(--acento) 55%, var(--borde));
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--acento) 14%, transparent), var(--sombra-2);
+}
+
+@media (min-width: 1024px) {
+  .tarjeta {
+    scroll-margin-top: calc(var(--alto-barra) + 20px);
+  }
+}
+
+.tarjeta__cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px 16px;
+  padding: 20px 22px 0;
+}
+
+.tarjeta__textos {
+  min-width: 0;
+}
+
+.tarjeta__antetitulo {
+  margin-bottom: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--acento-texto);
+}
+
+.tarjeta__titulo {
+  font-size: 17px;
+  font-weight: 650;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+}
+
+.tarjeta__subtitulo {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--texto-3);
+}
+
+.tarjeta__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.tarjeta__cuerpo {
+  padding: 18px 22px 22px;
+}
+
+.tarjeta__cuerpo--sin-relleno {
+  padding: 16px 0 0;
+}
+
+/* --- Botones ---------------------------------------------------------------- */
+
+.boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 16px;
+  border: 1px solid transparent;
+  border-radius: var(--radio-m);
+  font-size: 13.5px;
+  font-weight: 550;
+  white-space: nowrap;
+  transition:
+    background var(--transicion),
+    border-color var(--transicion),
+    color var(--transicion),
+    box-shadow var(--transicion),
+    transform var(--transicion);
+}
+
+.boton:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.boton:disabled {
+  opacity: 0.5;
+}
+
+.boton--primario {
+  background: var(--acento);
+  color: var(--sobre-acento);
+  box-shadow: 0 6px 16px -8px color-mix(in srgb, var(--acento) 80%, transparent);
+}
+
+.boton--primario:hover:not(:disabled) {
+  background: var(--acento-hover);
+}
+
+.boton--secundario {
+  border-color: var(--borde);
+  background: var(--superficie);
+  color: var(--texto);
+  box-shadow: var(--sombra-1);
+}
+
+.boton--secundario:hover:not(:disabled) {
+  border-color: var(--borde-fuerte);
+  background: var(--superficie-2);
+}
+
+.boton--fantasma {
+  color: var(--texto-2);
+}
+
+.boton--fantasma:hover:not(:disabled) {
+  background: var(--superficie-3);
+  color: var(--texto);
+}
+
+.boton--ia {
+  background: linear-gradient(135deg, var(--acento), var(--acento-2));
+  color: #fff;
+  box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--acento-2) 80%, transparent);
+}
+
+.boton--ia:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.boton--chico {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 12.5px;
+}
+
+.kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border: 1px solid var(--borde);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: var(--superficie-2);
+  font-family: var(--fuente-mono);
+  font-size: 10.5px;
+  line-height: 1;
+  color: var(--texto-2);
+}
+
+/* --- Control segmentado ----------------------------------------------------- */
+
+.segmentado {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: var(--radio-m);
+  background: var(--superficie-3);
+}
+
+.segmentado__opcion {
+  padding: 5px 12px;
+  border-radius: var(--radio-s);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--texto-3);
+  transition:
+    background var(--transicion),
+    color var(--transicion),
+    box-shadow var(--transicion);
+}
+
+.segmentado__opcion:hover {
+  color: var(--texto);
+}
+
+.segmentado__opcion[aria-pressed="true"] {
+  background: var(--superficie);
+  color: var(--texto);
+  box-shadow: var(--sombra-1), 0 0 0 1px var(--borde);
+}
+
+.segmentado--ancho {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+}
+
+/* --- Campos de formulario --------------------------------------------------- */
+
+.campo {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-m);
+  background: var(--superficie);
+  font-size: 14px;
+  color: var(--texto);
+  outline: none;
+  transition:
+    border-color var(--transicion),
+    box-shadow var(--transicion);
+}
+
+.campo::placeholder {
+  color: color-mix(in srgb, var(--texto-3) 75%, transparent);
+}
+
+.campo:focus {
+  border-color: var(--acento);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--acento) 16%, transparent);
+}
+
+.etiqueta {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12.5px;
+  font-weight: 550;
+  color: var(--texto-2);
+}
+
+.deslizador {
+  width: 100%;
+  margin-top: 10px;
+  accent-color: var(--acento);
+}
+
+/* --- Chips de estado -------------------------------------------------------- */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 10px;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  background: var(--superficie);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--texto-2);
+}
+
+.punto {
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--texto-3);
+}
+
+.punto--ok {
+  background: var(--exito);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--exito) 20%, transparent);
+}
+
+.punto--aviso {
+  background: var(--aviso);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--aviso) 20%, transparent);
+}
+
+.punto--error {
+  background: var(--error);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--error) 20%, transparent);
+}
+
+.punto--cargando {
+  animation: pulso 1.2s ease-in-out infinite;
+}
+
+.estado-servicio {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--texto-2);
+}
+
+.estado-servicio__valor {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--texto-3);
+}
+
+/* --- Avisos ----------------------------------------------------------------- */
+
+.aviso {
+  padding: 10px 14px;
+  border-radius: var(--radio-m);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.aviso--error {
+  background: var(--error-suave);
+  color: var(--error);
+}
+
+.aviso--exito {
+  background: var(--exito-suave);
+  color: var(--exito);
+}
+
+.aviso--advertencia {
+  background: var(--aviso-suave);
+  color: var(--aviso);
+}
+
+.aviso--info {
+  background: var(--superficie-2);
+  color: var(--texto-2);
+  border: 1px solid var(--borde);
+}
+
+.vacio {
+  padding: 28px 16px;
+  border: 1px dashed var(--borde-fuerte);
+  border-radius: var(--radio-l);
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--texto-3);
+}
+
+/* --- Tablas ----------------------------------------------------------------- */
+
+.tabla-envoltura {
+  overflow-x: auto;
+  border-top: 1px solid var(--borde);
+}
+
+.tabla-envoltura--alta {
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.tabla {
+  width: 100%;
+  font-size: 13.5px;
+}
+
+.tabla th {
+  position: sticky;
+  top: 0;
+  padding: 10px 14px;
+  background: var(--superficie-2);
+  border-bottom: 1px solid var(--borde);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: right;
+  color: var(--texto-3);
+  white-space: nowrap;
+}
+
+.tabla td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--borde);
+  text-align: right;
+  color: var(--texto-2);
+}
+
+.tabla th:first-child,
+.tabla td:first-child {
+  padding-left: 22px;
+}
+
+.tabla th:last-child,
+.tabla td:last-child {
+  padding-right: 22px;
+}
+
+.tabla--izquierda th,
+.tabla--izquierda td {
+  text-align: left;
+}
+
+.tabla tbody tr {
+  transition: background var(--transicion);
+}
+
+.tabla tbody tr:hover {
+  background: var(--superficie-2);
+}
+
+.tabla tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.tabla__fuerte {
+  font-weight: 600;
+  color: var(--texto);
+}

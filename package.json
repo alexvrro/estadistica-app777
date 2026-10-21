@@ -1,0 +1,15 @@
+{
+  "name": "estadistica-app777",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Estadística I: tabla de frecuencias para datos agrupados + Tutor de IA (Express + React)",
+  "scripts": {
+    "instalar": "npm install && npm install --prefix backend && npm install --prefix frontend",
+    "configurar": "npm run configurar --prefix backend",
+    "dev": "concurrently -n API,WEB -c blue,yellow \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "test": "npm test --prefix backend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

@@ -1,0 +1,5 @@
+/* Hoja de estilos principal (CSS puro, sin frameworks). */
+@import "./estilos/base.css";
+@import "./estilos/layout.css";
+@import "./estilos/componentes.css";
+@import "./estilos/secciones.css";
