@@ -23,6 +23,7 @@ export const api = {
   analizar: (payload) => peticion('/api/estadistica/analizar', { method: 'POST', body: JSON.stringify(payload) }),
   interpretar: (payload) => peticion('/api/estadistica/interpretar', { method: 'POST', body: JSON.stringify(payload) }),
   registros: () => peticion('/api/registros'),
+  registro: (id) => peticion(`/api/registros/${id}`),
   guardarRegistro: (payload) => peticion('/api/registros', { method: 'POST', body: JSON.stringify(payload) }),
   eliminarRegistro: (id) => peticion(`/api/registros/${id}`, { method: 'DELETE' }),
   historial: (limite = 100) => peticion(`/api/historial?limite=${limite}`),

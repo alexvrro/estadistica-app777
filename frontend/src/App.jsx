@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from './api/cliente';
-import { parsearDatos, parsearLista } from './utils/formato';
+import { num, parsearDatos, parsearLista } from './utils/formato';
 import Encabezado, { ChipsServicios, MenuLateral } from './components/Encabezado';
 import EntradaDatos from './components/EntradaDatos';
 import ResumenParametros from './components/ResumenParametros';
@@ -11,6 +11,10 @@ import TutorIA from './components/TutorIA';
 import RegistroPanel from './components/RegistroPanel';
 import HistorialPanel from './components/HistorialPanel';
 import PaletaComandos from './components/PaletaComandos';
+import Practica from './components/Practica';
+
+/** Identifica un resultado (para reiniciar el modo práctica al cambiar los datos). */
+const idResultado = (r) => `${r.parametros.n}-${r.totales.xiFi}-${r.totales.xi2Fi}-${r.parametros.k}`;
 
 const OPCIONES_INICIALES = {
   modo: 'continuo',
@@ -46,6 +50,7 @@ export default function App() {
 
   const [paleta, setPaleta] = useState(false);
   const [panelAbierto, setPanelAbierto] = useState(false); // opciones del análisis
+  const [practica, setPractica] = useState(false); // oculta medidas y gráfica para practicar
 
   // Tema: 'light' | 'dark' elegido con el botón, o null para seguir al sistema
   const [tema, setTema] = useState(() => {
@@ -74,6 +79,27 @@ export default function App() {
     }
   }, [tema]);
   const oscuro = tema ? tema === 'dark' : sistemaOscuro;
+
+  // El reporte se imprime siempre con el tema claro (también con Ctrl + P)
+  useEffect(() => {
+    const raiz = document.documentElement;
+    let previo;
+    const antes = () => {
+      previo = raiz.dataset.theme;
+      raiz.dataset.theme = 'light';
+    };
+    const despues = () => {
+      if (previo) raiz.dataset.theme = previo;
+      else delete raiz.dataset.theme;
+    };
+    window.addEventListener('beforeprint', antes);
+    window.addEventListener('afterprint', despues);
+    return () => {
+      window.removeEventListener('beforeprint', antes);
+      window.removeEventListener('afterprint', despues);
+    };
+  }, []);
+  const exportarPDF = () => window.print();
   const alternarTema = () => setTema(oscuro ? 'light' : 'dark');
 
   const construirPayload = useCallback(
@@ -125,6 +151,44 @@ export default function App() {
       setErrorIA(e.message);
     } finally {
       setCargandoIA(false);
+    }
+  };
+
+  const abrirRegistro = async (reg) => {
+    const op = reg.opciones || {};
+    const nuevas = {
+      ...OPCIONES_INICIALES,
+      decimales: opciones.decimales,
+      modo: op.modo === 'discreto' ? 'discreto' : 'continuo',
+      clases: op.clases ?? '',
+      amplitud: op.amplitud ?? '',
+      limiteInicial: op.limiteInicial ?? '',
+      percentiles: (op.percentiles || []).join(', '),
+      deciles: (op.deciles || []).join(', '),
+    };
+    const payload = {
+      datos: reg.datos,
+      modo: nuevas.modo,
+      clases: op.clases,
+      amplitud: op.amplitud,
+      limiteInicial: op.limiteInicial,
+      percentiles: op.percentiles || [],
+      deciles: op.deciles || [],
+    };
+    setCargando(true);
+    setError('');
+    try {
+      const r = await api.analizar({ ...payload, origen: 'automatico' });
+      setTexto(reg.datos.join(', '));
+      setOpciones(nuevas);
+      setContexto({ variable: reg.variable || '', unidad: reg.unidad || '', descripcion: '' });
+      setResultado(r);
+      setUltimoPayload(payload);
+      setInterpretacion(null);
+      setPractica(false);
+      requestAnimationFrame(() => document.getElementById('bloque-parametros')?.scrollIntoView({ behavior: 'smooth' }));
+    } finally {
+      setCargando(false);
     }
   };
 
@@ -206,6 +270,38 @@ export default function App() {
       accion: () => setPanelAbierto((a) => !a),
     },
     { id: 'ejemplo', grupo: 'Acciones', titulo: 'Cargar ejemplo (40 datos)', palabras: 'muestra', accion: cargarEjemplo },
+    {
+      id: 'importar',
+      grupo: 'Acciones',
+      titulo: 'Importar datos desde un archivo (.csv, .txt)',
+      palabras: 'excel subir abrir',
+      accion: () => document.getElementById('importar-archivo')?.click(),
+    },
+    ...(resultado
+      ? [
+          { id: 'pdf', grupo: 'Exportar', titulo: 'Exportar reporte a PDF / imprimir', atajo: ['Ctrl', 'P'], palabras: 'descargar imprimir', accion: exportarPDF },
+          {
+            id: 'png',
+            grupo: 'Exportar',
+            titulo: 'Descargar la gráfica como imagen PNG',
+            palabras: 'imagen foto',
+            accion: () => {
+              setPractica(false);
+              requestAnimationFrame(() => window.dispatchEvent(new Event('descargar-grafica')));
+            },
+          },
+          {
+            id: 'practica',
+            grupo: 'Acciones',
+            titulo: practica ? 'Salir del modo práctica' : 'Modo práctica: calcular las medidas a mano',
+            palabras: 'ejercicio examen estudiar',
+            accion: () => {
+              setPractica((p) => !p);
+              requestAnimationFrame(() => irA('bloque-medidas'));
+            },
+          },
+        ]
+      : []),
     { id: 'tema', grupo: 'Acciones', titulo: oscuro ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro', palabras: 'modo noche dia apariencia', accion: alternarTema },
     {
       id: 'limpiar',
@@ -285,9 +381,24 @@ export default function App() {
           onPaleta={() => setPaleta(true)}
           oscuro={oscuro}
           onTema={alternarTema}
+          onExportar={resultado ? exportarPDF : undefined}
         />
 
         <main className="contenido">
+          {resultado && (
+            <header className="reporte solo-impresion">
+              <h1 className="reporte__titulo">Reporte · Distribución de frecuencias</h1>
+              <p className="reporte__meta">
+                {contexto.variable ? `Variable: ${contexto.variable}${contexto.unidad ? ` (${contexto.unidad})` : ''} · ` : ''}
+                n = {resultado.parametros.n} · intervalos {resultado.parametros.modo === 'discreto' ? 'discretos' : 'continuos'} ·{' '}
+                {new Date().toLocaleDateString('es-MX', { dateStyle: 'long' })}
+              </p>
+              <p className="reporte__datos num">
+                Datos: {resultado.datos.ordenados.map((x) => num(x, resultado.parametros.precision, true)).join(', ')}
+              </p>
+            </header>
+          )}
+
           <section className="heroe">
             <div>
               <span className="heroe__insignia">Estadística I · Ingeniería</span>
@@ -339,22 +450,33 @@ export default function App() {
                 claseResaltada={claseResaltada}
                 setClaseResaltada={setClaseResaltada}
               />
-              <PanelMedidas medidas={resultado.medidas} decimales={dec} setClaseResaltada={setClaseResaltada} />
-              <div className="rejilla-grafica">
-                <GraficaDistribucion resultado={resultado} decimales={dec} claseResaltada={claseResaltada} />
-                <TutorIA
-                  interpretacion={interpretacion}
-                  cargando={cargandoIA}
-                  error={errorIA}
-                  onGenerar={generarIA}
-                  salud={salud}
-                />
-              </div>
+              {practica ? (
+                <Practica key={idResultado(resultado)} medidas={resultado.medidas} decimales={dec} onSalir={() => setPractica(false)} />
+              ) : (
+                <>
+                  <PanelMedidas
+                    medidas={resultado.medidas}
+                    decimales={dec}
+                    setClaseResaltada={setClaseResaltada}
+                    onPractica={() => setPractica(true)}
+                  />
+                  <div className="rejilla-grafica">
+                    <GraficaDistribucion resultado={resultado} decimales={dec} claseResaltada={claseResaltada} />
+                    <TutorIA
+                      interpretacion={interpretacion}
+                      cargando={cargandoIA}
+                      error={errorIA}
+                      onGenerar={generarIA}
+                      salud={salud}
+                    />
+                  </div>
+                </>
+              )}
             </>
           )}
 
           <div className="rejilla-dos">
-            <RegistroPanel payload={ultimoPayload} contexto={contexto} onCambio={notificarOperacion} />
+            <RegistroPanel payload={ultimoPayload} contexto={contexto} onCambio={notificarOperacion} onAbrir={abrirRegistro} />
             <HistorialPanel version={versionHistorial} />
           </div>
         </main>

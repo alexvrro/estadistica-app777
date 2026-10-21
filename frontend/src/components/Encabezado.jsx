@@ -66,7 +66,7 @@ export function MenuLateral({ secciones, activa, onIr, salud }) {
 }
 
 /** Barra superior: migas, buscador de comandos y cambio de tema. */
-export default function Encabezado({ secciones, activa, onIr, onPaleta, oscuro, onTema }) {
+export default function Encabezado({ secciones, activa, onIr, onPaleta, oscuro, onTema, onExportar }) {
   const actual = secciones.find((s) => s.id === activa);
   return (
     <header className="barra-superior">
@@ -91,6 +91,11 @@ export default function Encabezado({ secciones, activa, onIr, onPaleta, oscuro, 
               <Kbd>K</Kbd>
             </span>
           </button>
+          {onExportar && (
+            <button className="boton-icono" onClick={onExportar} aria-label="Exportar reporte a PDF" title="Exportar reporte a PDF">
+              <Icono nombre="imprimir" />
+            </button>
+          )}
           <button className="boton-icono" onClick={onTema} aria-label={oscuro ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'} title={oscuro ? 'Tema claro' : 'Tema oscuro'}>
             <Icono nombre={oscuro ? 'sol' : 'luna'} />
           </button>

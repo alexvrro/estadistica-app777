@@ -13,6 +13,11 @@ const RUTAS = {
   luna: 'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z',
   copiar: 'M9 9h11v11H9zM5 15H4V4h11v1',
   flecha: 'M9 6l6 6-6 6',
+  imprimir: 'M6 9V3h12v6M6 18H4v-7h16v7h-2M6 14h12v7H6z',
+  descargar: 'M12 4v11M7 10l5 5 5-5M5 20h14',
+  subir: 'M12 16V5M7 10l5-5 5 5M5 20h14',
+  practica: 'M9 11l3 3 8-8M20 12v7H4V5h11',
+  abrir: 'M14 4h6v6M20 4l-9 9M18 14v6H4V6h6',
 };
 
 export default function Icono({ nombre, tamano = 18 }) {

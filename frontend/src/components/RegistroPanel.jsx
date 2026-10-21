@@ -8,11 +8,12 @@ import { conMacron } from './Simbolo';
  * Registro de análisis guardados en MySQL en el servidor.
  * `payload` es la solicitud con la que se calculó el resultado que se muestra.
  */
-export default function RegistroPanel({ payload, contexto, onCambio }) {
+export default function RegistroPanel({ payload, contexto, onCambio, onAbrir }) {
   const [lista, setLista] = useState([]);
   const [guardando, setGuardando] = useState(false);
   const [aviso, setAviso] = useState('');
   const [error, setError] = useState('');
+  const [abriendo, setAbriendo] = useState(null);
 
   const cargar = useCallback(async () => {
     try {
@@ -40,6 +41,18 @@ export default function RegistroPanel({ payload, contexto, onCambio }) {
       setError(e.message);
     } finally {
       setGuardando(false);
+    }
+  };
+
+  const abrir = async (id) => {
+    setAbriendo(id);
+    setError('');
+    try {
+      await onAbrir(await api.registro(id));
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setAbriendo(null);
     }
   };
 
@@ -96,7 +109,10 @@ export default function RegistroPanel({ payload, contexto, onCambio }) {
                   <td className="num">{num(r.mediana, 2)}</td>
                   <td className="num">{num(r.desviacion, 2)}</td>
                   <td className="num">{num(r.cv, 2)}</td>
-                  <td>
+                  <td className="celda-acciones">
+                    <button className="boton-texto" onClick={() => abrir(r.id)} disabled={abriendo !== null}>
+                      {abriendo === r.id ? 'Abriendo…' : 'Abrir'}
+                    </button>
                     <button className="boton-texto-peligro" onClick={() => eliminar(r.id)}>
                       Eliminar
                     </button>

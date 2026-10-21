@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
-import Tarjeta, { Segmentado } from './Tarjeta';
+import Tarjeta, { Aviso, Boton, Segmentado } from './Tarjeta';
+import Icono from './Icono';
+import { descargarSvgComoPng } from '../utils/exportar';
 import { num } from '../utils/formato';
 import { conMacron } from './Simbolo';
 
@@ -7,7 +9,7 @@ import { conMacron } from './Simbolo';
  * Panel interactivo de la distribución, en SVG puro:
  *   - Frecuencias: columnas por clase (fi o fr %) con x̄, Me y Mo.
  *   - Acumulada: curva Fr % acumulada con la lectura de Q1, Q2 y Q3.
- *   - Caja: diagrama de caja (mín, Q1, Me, Q3, máx) con la media.
+ *   - Caja: diagrama de caja (bigotes hasta las vallas de Tukey) con la media y los atípicos.
  * Paleta validada para daltonismo (ver estilos/base.css, variables --graf-*).
  */
 
@@ -352,7 +354,7 @@ function VistaAcumulada({ resultado, decimales, cuartiles }) {
   );
 }
 
-function VistaCaja({ resultado, decimales, cuartiles, media, ric }) {
+function VistaCaja({ resultado, decimales, cuartiles, media, ric, atipicos }) {
   const [activo, setActivo] = useState(null);
   const W = useContext(AnchoCtx);
   const { filas, parametros: p } = resultado;
@@ -367,19 +369,27 @@ function VistaCaja({ resultado, decimales, cuartiles, media, ric }) {
   const limites = [filas[0].lri, ...filas.map((f) => f.lrs)];
   const d = (x) => num(x, decimales);
 
+  // Los bigotes llegan al último dato dentro de las vallas; lo demás es atípico.
+  // Con datos agrupados un cuartil puede pasar a ese dato: el bigote nunca entra en la caja.
+  const ordenados = resultado.datos.ordenados;
+  const enValla = (x) => !atipicos || (x >= atipicos.vallaInferior - 1e-9 && x <= atipicos.vallaSuperior + 1e-9);
+  const bigoteMin = Math.min(ordenados.find(enValla) ?? p.min, q1);
+  const bigoteMax = Math.max(ordenados.findLast(enValla) ?? p.max, q3);
+  const fuera = [...new Set(ordenados.filter((x) => !enValla(x)))];
+
   const partes = [
-    { id: 'izq', x: p.min, x2: q1, titulo: 'Bigote inferior: 25 % más bajo', filas: [[C.datos, d(p.min), 'mínimo'], [C.datos, d(q1), 'Q1']] },
+    { id: 'izq', x: bigoteMin, x2: q1, titulo: 'Bigote inferior', filas: [[C.datos, d(bigoteMin), bigoteMin === p.min ? 'mínimo' : 'menor dato dentro de las vallas'], [C.datos, d(q1), 'Q1']] },
     { id: 'caja', x: q1, x2: q3, titulo: 'Caja: 50 % central de los datos', filas: [[C.datos, d(q1), 'Q1'], [C.mediana, d(q2), 'Me = Q2'], [C.datos, d(q3), 'Q3'], [C.eje, d(ric), 'RIC = Q3 − Q1']] },
-    { id: 'der', x: q3, x2: p.max, titulo: 'Bigote superior: 25 % más alto', filas: [[C.datos, d(q3), 'Q3'], [C.datos, d(p.max), 'máximo']] },
+    { id: 'der', x: q3, x2: bigoteMax, titulo: 'Bigote superior', filas: [[C.datos, d(q3), 'Q3'], [C.datos, d(bigoteMax), bigoteMax === p.max ? 'máximo' : 'mayor dato dentro de las vallas']] },
   ];
   const sel = partes.find((t) => t.id === activo);
   const punto = sel && { x: (sx(sel.x) + sx(sel.x2)) / 2, y: yc - alto / 2, titulo: sel.titulo, filas: sel.filas };
 
   const marcas = [
-    { x: p.min, t: 'mín' },
+    ...(bigoteMin < q1 ? [{ x: bigoteMin, t: bigoteMin === p.min ? 'mín' : 'bigote' }] : []),
     { x: q1, t: 'Q1' },
     { x: q3, t: 'Q3' },
-    { x: p.max, t: 'máx' },
+    ...(bigoteMax > q3 ? [{ x: bigoteMax, t: bigoteMax === p.max ? 'máx' : 'bigote' }] : []),
   ];
 
   return (
@@ -391,9 +401,9 @@ function VistaCaja({ resultado, decimales, cuartiles, media, ric }) {
           ))}
 
           {/* bigotes */}
-          <line x1={sx(p.min)} x2={sx(q1)} y1={yc} y2={yc} stroke={C.datos} strokeWidth="2" />
-          <line x1={sx(q3)} x2={sx(p.max)} y1={yc} y2={yc} stroke={C.datos} strokeWidth="2" />
-          {[p.min, p.max].map((x) => (
+          <line x1={sx(bigoteMin)} x2={sx(q1)} y1={yc} y2={yc} stroke={C.datos} strokeWidth="2" />
+          <line x1={sx(q3)} x2={sx(bigoteMax)} y1={yc} y2={yc} stroke={C.datos} strokeWidth="2" />
+          {[bigoteMin, bigoteMax].map((x) => (
             <line key={x} x1={sx(x)} x2={sx(x)} y1={yc - 14} y2={yc + 14} stroke={C.datos} strokeWidth="2" strokeLinecap="round" />
           ))}
 
@@ -410,6 +420,13 @@ function VistaCaja({ resultado, decimales, cuartiles, media, ric }) {
             strokeWidth="2"
           />
           <line x1={sx(q2)} x2={sx(q2)} y1={yc - alto / 2} y2={yc + alto / 2} stroke={C.mediana} strokeWidth="3" />
+
+          {/* datos atípicos: círculos huecos */}
+          {fuera.map((x) => (
+            <circle key={x} cx={sx(x)} cy={yc} r="5" fill={C.superficie} stroke={C.tinta} strokeWidth="2">
+              <title>{`Dato atípico: ${d(x)}`}</title>
+            </circle>
+          ))}
 
           {/* media: rombo */}
           <path
@@ -434,8 +451,8 @@ function VistaCaja({ resultado, decimales, cuartiles, media, ric }) {
           ))}
 
           {/* etiquetas abajo: mín, Q1, Q3, máx */}
-          {repartirEtiquetas(marcas.map((m) => ({ ...m, etiqueta: m.t })), sx, 30).map((m) => (
-            <text key={m.t} x={m.px} y={yc + alto / 2 + 18 + m.fila * 13} textAnchor="middle" className="num" fontSize="11" fill={C.tenue}>
+          {repartirEtiquetas(marcas.map((m) => ({ ...m, etiqueta: m.t })), sx, 30).map((m, i) => (
+            <text key={i} x={m.px} y={yc + alto / 2 + 18 + m.fila * 13} textAnchor="middle" className="num" fontSize="11" fill={C.tenue}>
               {m.t}
             </text>
           ))}
@@ -487,6 +504,7 @@ export default function GraficaDistribucion({ resultado, decimales, claseResalta
   const [unidad, setUnidad] = useState('fi');
   const caja = useRef(null);
   const [ancho, setAncho] = useState(W_MAX);
+  const [errorPng, setErrorPng] = useState('');
 
   useEffect(() => {
     const el = caja.current;
@@ -501,6 +519,8 @@ export default function GraficaDistribucion({ resultado, decimales, claseResalta
   const modas = medidas.tendenciaCentral.moda.valores.map((m) => m.valor);
   const cuartiles = medidas.posicion.cuartiles;
   const ric = medidas.dispersion.rangoIntercuartil.valor;
+  const atipicos = medidas.atipicos;
+  const nAtipicos = atipicos ? new Set(atipicos.valores).size : 0;
 
   const refs = [
     { x: media, color: C.media, etiqueta: `x̄ = ${num(media, decimales)}` },
@@ -525,8 +545,31 @@ export default function GraficaDistribucion({ resultado, decimales, claseResalta
       { color: C.datos, texto: 'Caja Q1–Q3 y bigotes', forma: 'caja' },
       { color: C.mediana, texto: `Me = ${num(mediana, decimales)}` },
       { color: C.media, texto: `x̄ = ${num(media, decimales)} (rombo)` },
+      ...(nAtipicos ? [{ color: C.tinta, texto: `Atípicos: ${atipicos.valores.join(', ')}` }] : []),
     ],
   };
+
+  const descargarPng = async () => {
+    setErrorPng('');
+    try {
+      await descargarSvgComoPng(caja.current.querySelector('svg'), {
+        nombre: `grafica-${vista}`,
+        titulo: textos[vista][0],
+        leyenda: leyendas[vista],
+      });
+    } catch (e) {
+      setErrorPng(e.message || 'No se pudo generar la imagen.');
+    }
+  };
+
+  // La paleta de comandos pide la descarga con un evento
+  const refDescargar = useRef(descargarPng);
+  refDescargar.current = descargarPng;
+  useEffect(() => {
+    const alPedir = () => refDescargar.current();
+    window.addEventListener('descargar-grafica', alPedir);
+    return () => window.removeEventListener('descargar-grafica', alPedir);
+  }, []);
 
   return (
     <Tarjeta
@@ -540,6 +583,10 @@ export default function GraficaDistribucion({ resultado, decimales, claseResalta
             <Segmentado etiqueta="Eje vertical" opciones={[['fi', 'fi'], ['fr', 'fr %']]} valor={unidad} onCambio={setUnidad} />
           )}
           <Segmentado etiqueta="Tipo de gráfica" opciones={VISTAS} valor={vista} onCambio={setVista} />
+          <Boton chico onClick={descargarPng} title="Descargar la gráfica como imagen PNG">
+            <Icono nombre="descargar" tamano={15} />
+            PNG
+          </Boton>
         </>
       }
     >
@@ -549,10 +596,15 @@ export default function GraficaDistribucion({ resultado, decimales, claseResalta
             <VistaFrecuencias resultado={resultado} decimales={decimales} claseResaltada={claseResaltada} refs={refs} unidad={unidad} />
           )}
           {vista === 'acumulada' && <VistaAcumulada resultado={resultado} decimales={decimales} cuartiles={cuartiles} />}
-          {vista === 'caja' && <VistaCaja resultado={resultado} decimales={decimales} cuartiles={cuartiles} media={media} ric={ric} />}
+          {vista === 'caja' && <VistaCaja resultado={resultado} decimales={decimales} cuartiles={cuartiles} media={media} ric={ric} atipicos={atipicos} />}
         </AnchoCtx.Provider>
       </div>
       <Leyenda items={leyendas[vista]} />
+      {errorPng && (
+        <Aviso tipo="error" className="entrada__error">
+          {errorPng}
+        </Aviso>
+      )}
     </Tarjeta>
   );
 }

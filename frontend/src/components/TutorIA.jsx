@@ -22,6 +22,7 @@ export default function TutorIA({ interpretacion, cargando, error, onGenerar, sa
   return (
     <Tarjeta
       id="bloque-tutor"
+      className={interpretacion ? '' : 'sin-interpretacion'}
       antetitulo="Paso 5 · Interpretación"
       titulo="Tutor de IA"
       subtitulo="Interpretación redactada para su reporte universitario"

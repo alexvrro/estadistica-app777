@@ -835,3 +835,160 @@
   align-items: center;
   gap: 4px;
 }
+
+/* --- Importar archivo (arrastrar y soltar) ------------------------------------ */
+
+.entrada__marco--arrastrando {
+  border-color: var(--acento);
+  border-style: dashed;
+  background: var(--acento-suave);
+}
+
+.entrada__soltar {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--acento-suave) 92%, transparent);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--acento-texto);
+  pointer-events: none;
+}
+
+/* --- Agrupados vs. sin agrupar ----------------------------------------------- */
+
+.comparacion {
+  overflow-x: auto;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-l);
+}
+
+.comparacion .tabla th:first-child,
+.comparacion .tabla td:first-child {
+  padding-left: 16px;
+  text-align: left;
+}
+
+.comparacion .tabla th:last-child,
+.comparacion .tabla td:last-child {
+  padding-right: 16px;
+}
+
+.comparacion__pct {
+  color: var(--texto-3);
+}
+
+/* --- Registro: acciones por fila --------------------------------------------- */
+
+.celda-acciones {
+  white-space: nowrap;
+}
+
+.celda-acciones button + button {
+  margin-left: 14px;
+}
+
+.boton-texto {
+  font-size: 12.5px;
+  font-weight: 550;
+  color: var(--acento-texto);
+}
+
+.boton-texto:hover:not(:disabled) {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.boton-texto:disabled {
+  opacity: 0.5;
+}
+
+/* --- Modo práctica ------------------------------------------------------------ */
+
+.practica__rejilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 12px;
+}
+
+.practica__pregunta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-l);
+  background: var(--superficie-2);
+  transition:
+    border-color var(--transicion),
+    background var(--transicion);
+}
+
+.practica__pregunta--correcta {
+  border-color: color-mix(in srgb, var(--exito) 45%, var(--borde));
+  background: var(--exito-suave);
+}
+
+.practica__pregunta--incorrecta {
+  border-color: color-mix(in srgb, var(--error) 45%, var(--borde));
+  background: var(--error-suave);
+}
+
+.practica__etiqueta {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--texto-2);
+}
+
+.practica__resultado {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--texto-2);
+}
+
+.practica__pregunta--correcta .practica__resultado {
+  color: var(--exito);
+}
+
+.practica__pregunta--incorrecta .practica__resultado {
+  color: var(--error);
+}
+
+.practica__puntaje {
+  font-size: 13.5px;
+  font-weight: 550;
+  color: var(--texto-2);
+}
+
+/* --- Reporte (solo impresión) ------------------------------------------------- */
+
+.solo-impresion {
+  display: none !important;
+}
+
+.reporte__titulo {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.reporte__meta {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--texto-2);
+}
+
+.reporte__datos {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-m);
+  font-size: 10.5px;
+  line-height: 1.6;
+  color: var(--texto-2);
+}

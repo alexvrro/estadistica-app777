@@ -6,6 +6,21 @@ Incluye un tutor de IA con **Google Gemini**, un **registro de análisis con sus
 - **Backend:** Node.js 20.19+ + Express + mysql2
 - **Frontend:** React + Vite + CSS puro (`frontend/src/estilos/`, tema claro y oscuro)
 
+### Funciones
+
+| Función | Cómo se usa |
+|---|---|
+| Tabla de frecuencias y medidas | Escribe o pega los datos y pulsa **Enter** (o **Calcular**). Cada medida trae su procedimiento. |
+| Importar datos | Botón **Importar archivo** o arrastra un `.csv`, `.tsv` o `.txt` al área de datos. En tablas toma la primera columna numérica que no sea un número de fila; acepta coma decimal con `;` o tabulador. |
+| Forma de la distribución | Asimetría de Pearson, **curtosis** por momentos (g2) y percentílica (K), y **datos atípicos** con las vallas de Tukey (Q1 − 1.5·RIC, Q3 + 1.5·RIC). |
+| Agrupados vs. sin agrupar | Compara media, mediana y desviación de la tabla con las de los datos originales. |
+| Gráficas | Frecuencias (fi / fr %), frecuencia acumulada con la lectura de cuartiles, y diagrama de caja con atípicos. Botón **PNG** para descargarla como imagen. |
+| Modo práctica | Botón **Modo práctica** en *Medidas*: oculta los resultados, calculas a mano y la app te dice cuáles están bien (margen de 1 %) y muestra el procedimiento de los incorrectos. |
+| Reporte en PDF | Botón de impresora en la barra superior (o **Ctrl + P**) → «Guardar como PDF». Incluye datos, tabla, medidas con procedimientos, gráfica e interpretación de la IA. |
+| Tutor de IA | **Generar análisis**: interpretación con Gemini (o en modo local si no hay clave). |
+| Registro e historial (MySQL) | **Guardar análisis**, y **Abrir** para recuperar uno guardado con sus datos y opciones. |
+| Paleta de comandos | **Ctrl + K**: todas las acciones con el teclado, incluido el cambio de tema claro / oscuro. |
+
 ## 1. Estructura
 
 ```
@@ -28,10 +43,15 @@ estadistica-app777/
 │   │   │   ├── ia.service.js           ← tutor (Gemini)
 │   │   │   └── historial.service.js
 │   │   └── routes/ · utils/ · data/
-│   └── tests/estadistica.test.js
+│   └── tests/                         ← motor estadístico y utilidades de .env
 └── frontend/
-    └── src/ (App.jsx, components/: TablaFrecuencias, PanelMedidas, Histograma,
-              TutorIA, RegistroPanel, HistorialPanel, …)
+    └── src/
+        ├── App.jsx
+        ├── components/   ← EntradaDatos, TablaFrecuencias, PanelMedidas, Practica,
+        │                   GraficaDistribucion, TutorIA, RegistroPanel, HistorialPanel,
+        │                   PaletaComandos, Encabezado, …
+        ├── estilos/      ← base, layout, componentes, secciones e impresión (CSS puro)
+        └── utils/        ← formato y lectura de archivos, exportar gráfica a PNG
 ```
 
 ## 2. Requisitos
@@ -143,3 +163,30 @@ Si MySQL no está configurado, las rutas de registros responden `503` con un men
 - **El tutor muestra "respaldo local":** la clave de Gemini falta o es inválida; el aviso amarillo indica el motivo. Vuelve a ejecutar `npm run configurar` para verificarla.
 - **`⚠ No existe backend/.env` al arrancar:** ejecuta `npm run configurar`.
 - **Puerto 3001 ocupado:** cambia `PORT` en `.env`.
+
+## 9. Publicar en internet
+
+El backend también entrega la página compilada, así que basta **un solo servicio** con Node.js más una base MySQL.
+Ejemplo con [Railway](https://railway.com) (otros servicios como Render funcionan igual):
+
+1. Sube el proyecto a un repositorio de GitHub (el archivo `backend/.env` **no** se sube: está en `.gitignore`).
+2. En Railway: **New Project → Deploy from GitHub repo** y elige el repositorio.
+3. En el mismo proyecto: **+ New → Database → MySQL**.
+4. En el servicio de la app, pestaña **Variables**, agrega:
+
+   | Variable | Valor |
+   |---|---|
+   | `MYSQL_URL` | la referencia `${{MySQL.MYSQL_URL}}` que ofrece Railway |
+   | `GEMINI_API_KEY` | tu clave de Gemini |
+   | `GEMINI_MODEL` | el modelo que usas en local (ver `backend/.env`) |
+
+5. Railway ejecuta `npm run build` (instala dependencias y compila el frontend) y luego `npm start`.
+   El puerto lo asigna el servicio con la variable `PORT`.
+6. En **Settings → Networking → Generate Domain** obtienes la dirección pública.
+
+Las tablas de MySQL se crean solas al arrancar. Para probarlo en tu computadora igual que en producción:
+
+```bash
+npm run build   # compila el frontend en frontend/dist
+npm start       # la app completa en http://localhost:3001
+```
