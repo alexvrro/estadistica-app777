@@ -47,6 +47,16 @@ function resumirResultados(res, contexto = {}) {
       percentiles: Object.fromEntries(m.posicion.percentiles.map((q) => [`P${q.k}`, +r(q.valor, 4)])),
     },
     asimetriaPearson: +r(m.forma.asimetriaPearson.valor, 4),
+    ...(m.forma.curtosis && {
+      curtosis: { g2: +r(m.forma.curtosis.valor, 4), tipo: m.forma.curtosis.tipo },
+    }),
+    ...(m.atipicos && {
+      atipicos: {
+        vallaInferior: +r(m.atipicos.vallaInferior, 4),
+        vallaSuperior: +r(m.atipicos.vallaSuperior, 4),
+        valores: m.atipicos.valores,
+      },
+    }),
   };
 }
 
@@ -63,7 +73,8 @@ Reglas:
   ## Forma de la distribución
   ## Conclusión para el reporte
 - Interpreta cada medida en el contexto de la variable (qué significa para los datos, no solo la definición).
-- Compara media, mediana y moda para comentar la asimetría.
+- Compara media, mediana y moda para comentar la asimetría, y usa la curtosis (g2) para comentar el apuntamiento.
+- Si hay datos atípicos (fuera de las vallas de Tukey), menciónalos y su posible efecto en la media.
 - Interpreta el CV (< 15 % baja, 15–30 % moderada, > 30 % alta variabilidad) y el percentil solicitado
   ("el X % de las observaciones es menor o igual a ...").
 - Máximo ~450 palabras. Sin tablas.`;
@@ -132,6 +143,16 @@ function interpretacionLocal(s) {
         ? `de ${intensidad}asimetría positiva (sesgo a la derecha): algunos valores altos desplazan la media hacia arriba`
         : `de ${intensidad}asimetría negativa (sesgo a la izquierda): algunos valores bajos desplazan la media hacia abajo`;
   const modal = s.tabla.reduce((a, b) => (b.fi > a.fi ? b : a));
+  const curtosis = s.curtosis
+    ? ` La curtosis es g2 = ${n2(s.curtosis.g2)}: la distribución es **${s.curtosis.tipo}** (${
+        s.curtosis.tipo === 'leptocúrtica' ? 'más apuntada que la normal' : s.curtosis.tipo === 'platicúrtica' ? 'más achatada que la normal' : 'con un apuntamiento similar al de la normal'
+      }).`
+    : '';
+  const atipicos = s.atipicos
+    ? s.atipicos.valores.length
+      ? ` Hay ${s.atipicos.valores.length} dato(s) atípico(s) fuera de las vallas [${n2(s.atipicos.vallaInferior)}, ${n2(s.atipicos.vallaSuperior)}]: ${s.atipicos.valores.join(', ')}${u}; conviene revisarlos porque desplazan la media.`
+      : ` No hay datos atípicos: todos están dentro de las vallas [${n2(s.atipicos.vallaInferior)}, ${n2(s.atipicos.vallaSuperior)}].`
+    : '';
   const percentiles = Object.entries(pos.percentiles)
     .map(([k, val]) => `- **${k} = ${n2(val)}${u}**: el ${k.slice(1)} % de las observaciones es menor o igual a este valor.`)
     .join('\n');
@@ -153,7 +174,7 @@ La varianza muestral es s² = ${n2(d.varianzaMuestral)} y la desviación estánd
 ${percentiles}
 
 ## Forma de la distribución
-El coeficiente de asimetría de Pearson es Sk = ${n2(sk)}, por lo que la distribución es ${forma}. ${t.media > t.mediana ? 'Es coherente con que la media sea mayor que la mediana.' : t.media < t.mediana ? 'Es coherente con que la media sea menor que la mediana.' : 'La media y la mediana coinciden.'}
+El coeficiente de asimetría de Pearson es Sk = ${n2(sk)}, por lo que la distribución es ${forma}. ${t.media > t.mediana ? 'Es coherente con que la media sea mayor que la mediana.' : t.media < t.mediana ? 'Es coherente con que la media sea menor que la mediana.' : 'La media y la mediana coinciden.'}${curtosis}${atipicos}
 
 ## Conclusión para el reporte
 El valor típico de ${v} se sitúa entre ${n2(Math.min(t.media, t.mediana))} y ${n2(Math.max(t.media, t.mediana))}${u}, con una variabilidad ${nivelCV} (CV = ${n2(cv)} %). ${nivelCV === 'alta' ? 'Se recomienda reportar también la mediana y el RIC, que son más robustos.' : 'La media y la desviación estándar resumen adecuadamente el comportamiento de la muestra.'}

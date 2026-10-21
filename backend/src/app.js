@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const estadisticaRoutes = require('./routes/estadistica.routes');
@@ -24,6 +26,13 @@ app.get('/api/salud', (_req, res) => {
 app.use('/api/estadistica', estadisticaRoutes);
 app.use('/api/registros', registroRoutes);
 app.use('/api/historial', historialRoutes);
+
+// En producción el mismo servidor entrega el frontend compilado (npm run build)
+const DIST = path.join(__dirname, '..', '..', 'frontend', 'dist');
+if (fs.existsSync(DIST)) {
+  app.use(express.static(DIST));
+  app.get(/^\/(?!api\/).*/, (_req, res) => res.sendFile('index.html', { root: DIST }));
+}
 
 app.use((_req, res) => res.status(404).json({ error: 'Ruta no encontrada' }));
 

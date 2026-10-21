@@ -260,6 +260,16 @@ function medidas(tabla, consultas = {}) {
   /* Forma (extra útil para el reporte) */
   const asimetriaPearson = desviacion > 0 ? (3 * (media - mediana.valor)) / desviacion : 0;
 
+  // Curtosis por momentos: g2 = m4 / m2² − 3 (0 = normal)
+  const m2 = filas.reduce((s, f) => s + (f.xi - media) ** 2 * f.fi, 0) / n;
+  const m4 = filas.reduce((s, f) => s + (f.xi - media) ** 4 * f.fi, 0) / n;
+  const curtosis = m2 > 0 ? m4 / (m2 * m2) - 3 : 0;
+
+  // Curtosis percentílica: K = (Q3 − Q1) / (2·(P90 − P10)) (0.263 = normal)
+  const p10 = cuantil(tabla, 0.1, 'P10', `10·n/100 = 10·${n}/100`);
+  const p90 = cuantil(tabla, 0.9, 'P90', `90·n/100 = 90·${n}/100`);
+  const curtosisPercentil = p90.valor - p10.valor > 0 ? (q3 - q1) / (2 * (p90.valor - p10.valor)) : 0;
+
   return {
     tendenciaCentral: {
       media: {
@@ -300,17 +310,73 @@ function medidas(tabla, consultas = {}) {
         valor: asimetriaPearson,
         pasos: [`Sk = 3(x̄ − Me) / s = 3(${fmt(media)} − ${fmt(mediana.valor)}) / ${fmt(desviacion)} = ${fmt(asimetriaPearson)}`],
       },
+      curtosis: {
+        valor: curtosis,
+        tipo: tipoCurtosis(curtosis, 0, 0.5),
+        pasos: [
+          `m2 = Σ(xi − x̄)²·fi / n = ${fmt(m2)};  m4 = Σ(xi − x̄)⁴·fi / n = ${fmt(m4)}`,
+          `g2 = m4 / m2² − 3 = ${fmt(m4)} / ${fmt(m2)}² − 3 = ${fmt(curtosis)}`,
+        ],
+      },
+      curtosisPercentil: {
+        valor: curtosisPercentil,
+        tipo: tipoCurtosis(curtosisPercentil, 0.263, 0.02, true),
+        pasos: [
+          `P10 = ${fmt(p10.valor)};  P90 = ${fmt(p90.valor)}`,
+          `K = (Q3 − Q1) / (2·(P90 − P10)) = (${fmt(q3)} − ${fmt(q1)}) / (2·(${fmt(p90.valor)} − ${fmt(p10.valor)})) = ${fmt(curtosisPercentil)}`,
+        ],
+      },
     },
   };
+}
+
+/**
+ * Clasifica la curtosis respecto de la normal (`referencia`). En la percentílica
+ * la relación es inversa: K menor que 0.263 indica una distribución leptocúrtica.
+ */
+function tipoCurtosis(valor, referencia, tolerancia, inversa = false) {
+  if (Math.abs(valor - referencia) <= tolerancia) return 'mesocúrtica';
+  const mayor = valor > referencia;
+  return mayor !== inversa ? 'leptocúrtica' : 'platicúrtica';
+}
+
+/** Vallas de Tukey (Q1 − 1.5·RIC, Q3 + 1.5·RIC) y los datos que quedan fuera. */
+function atipicos(ordenados, m) {
+  const q1 = m.posicion.cuartiles[0].valor;
+  const q3 = m.posicion.cuartiles[2].valor;
+  const ric = q3 - q1;
+  const inferior = q1 - 1.5 * ric;
+  const superior = q3 + 1.5 * ric;
+  return {
+    vallaInferior: inferior,
+    vallaSuperior: superior,
+    valores: ordenados.filter((x) => x < inferior - EPS || x > superior + EPS),
+    pasos: [
+      `Valla inferior = Q1 − 1.5·RIC = ${fmt(q1)} − 1.5·${fmt(ric)} = ${fmt(inferior)}`,
+      `Valla superior = Q3 + 1.5·RIC = ${fmt(q3)} + 1.5·${fmt(ric)} = ${fmt(superior)}`,
+    ],
+  };
+}
+
+/** Medidas exactas con los datos sin agrupar, para comparar con las de la tabla. */
+function noAgrupados(ordenados) {
+  const n = ordenados.length;
+  const media = ordenados.reduce((s, x) => s + x, 0) / n;
+  const mitad = Math.floor(n / 2);
+  const mediana = n % 2 ? ordenados[mitad] : (ordenados[mitad - 1] + ordenados[mitad]) / 2;
+  const varianza = n > 1 ? ordenados.reduce((s, x) => s + (x - media) ** 2, 0) / (n - 1) : 0;
+  return { media, mediana, varianza, desviacion: Math.sqrt(varianza) };
 }
 
 /** Punto de entrada: datos en bruto → tabla + todas las medidas. */
 function analizar(datos, opciones = {}) {
   const tabla = construirTabla(datos, opciones);
+  const ordenados = [...datos].sort((a, b) => a - b);
+  const m = medidas(tabla, opciones);
   return {
-    datos: { n: datos.length, ordenados: [...datos].sort((a, b) => a - b) },
+    datos: { n: datos.length, ordenados },
     ...tabla,
-    medidas: medidas(tabla, opciones),
+    medidas: { ...m, atipicos: atipicos(ordenados, m), noAgrupados: noAgrupados(ordenados) },
   };
 }
 

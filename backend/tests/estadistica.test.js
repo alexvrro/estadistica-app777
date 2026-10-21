@@ -69,3 +69,28 @@ test('validación de entrada en texto', () => {
   assert.throws(() => normalizarDatos('1, a, 3'), /no numéricos/);
   assert.throws(() => normalizarDatos([5]), /al menos 2/);
 });
+
+test('curtosis por momentos y percentílica de la muestra de 40 datos', () => {
+  const f = analizar(MUESTRA_EJEMPLO).medidas.forma;
+  // m2 = 2627.1 / 40; m4 = Σ(xi − x̄)⁴·fi / 40
+  cerca(f.curtosis.valor, 9699.70805 / (2627.1 / 40) ** 2 - 3, 1e-3);
+  assert.equal(f.curtosis.tipo, 'platicúrtica');
+  // K = (58.5 − 46) / (2·(64 − 42))
+  cerca(f.curtosisPercentil.valor, 12.5 / 44);
+});
+
+test('vallas de Tukey detectan los datos atípicos', () => {
+  const r = analizar([10, 12, 11, 13, 12, 11, 12, 13, 14, 11, 12, 95]);
+  const { vallaInferior, vallaSuperior, valores } = r.medidas.atipicos;
+  assert.ok(vallaInferior < 10 && vallaSuperior < 95);
+  assert.deepEqual(valores, [95]);
+  assert.deepEqual(analizar(MUESTRA_EJEMPLO).medidas.atipicos.valores, []);
+});
+
+test('medidas exactas con los datos sin agrupar', () => {
+  const na = analizar([1, 2, 3, 4, 10]).medidas.noAgrupados;
+  cerca(na.media, 4);
+  cerca(na.mediana, 3);
+  cerca(na.varianza, 12.5);
+  cerca(analizar([1, 2, 3, 4]).medidas.noAgrupados.mediana, 2.5);
+});

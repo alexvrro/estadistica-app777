@@ -1,23 +1,27 @@
 /**
  * Conexión a MySQL (driver mysql2). Compatible con MySQL 5.7 y 8.0.
- * Se activa cuando MYSQL_DATABASE está definido en backend/.env.
+ * Se activa cuando MYSQL_DATABASE está definido en backend/.env, o con MYSQL_URL
+ * (mysql://usuario:clave@host:puerto/base), que es lo que entregan los hostings.
  */
 const mysql = require('mysql2/promise');
 
-const configurado = Boolean(process.env.MYSQL_DATABASE);
+const url = process.env.MYSQL_URL;
+const configurado = Boolean(url || process.env.MYSQL_DATABASE);
 
-const pool = configurado
-  ? mysql.createPool({
-      host: process.env.MYSQL_HOST || 'localhost',
-      port: Number(process.env.MYSQL_PORT) || 3306,
-      user: process.env.MYSQL_USER || 'root',
-      password: process.env.MYSQL_PASSWORD || '',
-      database: process.env.MYSQL_DATABASE,
-      charset: 'utf8mb4',
-      waitForConnections: true,
-      connectionLimit: 5,
-    })
-  : null;
+const pool = !configurado
+  ? null
+  : url
+    ? mysql.createPool({ uri: url, charset: 'utf8mb4', waitForConnections: true, connectionLimit: 5 })
+    : mysql.createPool({
+        host: process.env.MYSQL_HOST || 'localhost',
+        port: Number(process.env.MYSQL_PORT) || 3306,
+        user: process.env.MYSQL_USER || 'root',
+        password: process.env.MYSQL_PASSWORD || '',
+        database: process.env.MYSQL_DATABASE,
+        charset: 'utf8mb4',
+        waitForConnections: true,
+        connectionLimit: 5,
+      });
 
 /** Devuelve el pool o lanza un error 503 con un mensaje claro. */
 function requerirMySQL() {
