@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from './api/cliente';
 import { num, parsearDatos, parsearLista } from './utils/formato';
-import Encabezado, { ChipsServicios, MenuLateral } from './components/Encabezado';
+import Encabezado, { ChipsServicios } from './components/Encabezado';
 import EntradaDatos from './components/EntradaDatos';
 import ResumenParametros from './components/ResumenParametros';
 import TablaFrecuencias from './components/TablaFrecuencias';
@@ -370,7 +370,6 @@ export default function App() {
 
   return (
     <div className="app">
-      <MenuLateral secciones={secciones} activa={activa} onIr={(id) => irA(id, id === 'bloque-datos' ? 'entrada-datos' : undefined)} salud={salud} />
       <PaletaComandos abierta={paleta} onCerrar={() => setPaleta(false)} comandos={comandos} />
 
       <div className="principal">
@@ -382,6 +381,7 @@ export default function App() {
           oscuro={oscuro}
           onTema={alternarTema}
           onExportar={resultado ? exportarPDF : undefined}
+          salud={salud}
         />
 
         <main className="contenido">
@@ -400,7 +400,7 @@ export default function App() {
           )}
 
           <section className="heroe">
-            <div>
+            <div className="heroe__textos">
               <span className="heroe__insignia">Estadística I · Ingeniería</span>
               <h1 className="heroe__titulo">
                 Distribución de <span className="heroe__degradado">frecuencias</span>
@@ -409,10 +409,33 @@ export default function App() {
                 Tabla para datos agrupados, medidas de tendencia central, dispersión y posición, gráficas interactivas e
                 interpretación asistida por IA.
               </p>
+              <div className="heroe__estados">
+                <ChipsServicios salud={salud} />
+              </div>
             </div>
-            <div className="heroe__estados">
-              <ChipsServicios salud={salud} />
-            </div>
+            {resultado && (
+              <aside className="nota-adhesiva" aria-label="Resumen del análisis actual">
+                <p className="nota-adhesiva__titulo">resumen rápido</p>
+                <dl className="nota-adhesiva__lista">
+                  <div>
+                    <dt>n</dt>
+                    <dd className="num">{resultado.parametros.n}</dd>
+                  </div>
+                  <div>
+                    <dt>x̄</dt>
+                    <dd className="num">{num(resultado.medidas.tendenciaCentral.media.valor, dec, true)}</dd>
+                  </div>
+                  <div>
+                    <dt>Me</dt>
+                    <dd className="num">{num(resultado.medidas.tendenciaCentral.mediana.valor, dec, true)}</dd>
+                  </div>
+                  <div>
+                    <dt>s</dt>
+                    <dd className="num">{num(resultado.medidas.dispersion.desviacion.valor, dec, true)}</dd>
+                  </div>
+                </dl>
+              </aside>
+            )}
           </section>
 
           <EntradaDatos
@@ -481,7 +504,7 @@ export default function App() {
           </div>
         </main>
 
-        <footer className="pie">Estadística I · Distribución de frecuencias para datos agrupados · Express + React</footer>
+        <footer className="pie">Estadística I · hecho con lápiz, papel, Express y React ✎</footer>
       </div>
     </div>
   );

@@ -26,3 +26,12 @@ CREATE TABLE IF NOT EXISTS registros_analisis (
   opciones    TEXT NOT NULL,              -- JSON con modo, k, A, percentiles...
   resultado   LONGTEXT NOT NULL           -- JSON con tabla y medidas completas
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS practicas (
+  id          INT AUTO_INCREMENT PRIMARY KEY,
+  creado_en   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  n           INT NOT NULL,               -- tamaño de la muestra del ejercicio
+  aciertos    INT NOT NULL,
+  total       INT NOT NULL,
+  detalle     TEXT NOT NULL               -- JSON { media: true, varianza: false, ... }
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

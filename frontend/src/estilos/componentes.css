@@ -2,28 +2,21 @@
    Componentes reutilizables: tarjeta, botones, campos, chips, tablas, avisos
    ========================================================================== */
 
-/* --- Tarjeta ---------------------------------------------------------------- */
+/* --- Tarjeta (hoja con borde de tinta) ------------------------------------- */
 
 .tarjeta {
   min-width: 0;
-  border: 1px solid var(--borde);
+  border: var(--trazo) solid var(--tinta);
   border-radius: var(--radio-xl);
   background: var(--superficie);
   box-shadow: var(--sombra-2);
-  scroll-margin-top: calc(var(--alto-barra) + 64px);
+  scroll-margin-top: calc(var(--alto-barra) + var(--alto-pestanas) + 20px);
   outline: none;
-  transition: box-shadow var(--transicion), border-color var(--transicion);
+  transition: box-shadow var(--transicion), transform var(--transicion);
 }
 
 .tarjeta:focus {
-  border-color: color-mix(in srgb, var(--acento) 55%, var(--borde));
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--acento) 14%, transparent), var(--sombra-2);
-}
-
-@media (min-width: 1024px) {
-  .tarjeta {
-    scroll-margin-top: calc(var(--alto-barra) + 20px);
-  }
+  box-shadow: 6px 6px 0 var(--acento);
 }
 
 .tarjeta__cabecera {
@@ -32,7 +25,8 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px 16px;
-  padding: 20px 22px 0;
+  padding: 20px 24px 16px;
+  border-bottom: 1px dashed var(--borde-fuerte);
 }
 
 .tarjeta__textos {
@@ -40,23 +34,23 @@
 }
 
 .tarjeta__antetitulo {
-  margin-bottom: 4px;
-  font-size: 11.5px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--acento-texto);
+  margin-bottom: 2px;
+  font-family: var(--fuente-mano);
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--acento-2);
 }
 
 .tarjeta__titulo {
-  font-size: 17px;
-  font-weight: 650;
-  line-height: 1.3;
-  letter-spacing: -0.015em;
+  font-size: 23px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 
 .tarjeta__subtitulo {
-  margin-top: 2px;
+  margin-top: 4px;
   font-size: 13px;
   color: var(--texto-3);
 }
@@ -69,47 +63,52 @@
 }
 
 .tarjeta__cuerpo {
-  padding: 18px 22px 22px;
+  padding: 20px 24px 24px;
 }
 
 .tarjeta__cuerpo--sin-relleno {
-  padding: 16px 0 0;
+  padding: 0;
 }
 
-/* --- Botones ---------------------------------------------------------------- */
+/* --- Botones (se «hunden» al pulsarlos) ------------------------------------- */
 
 .boton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  height: 38px;
-  padding: 0 16px;
-  border: 1px solid transparent;
+  height: 40px;
+  padding: 0 18px;
+  border: var(--trazo) solid var(--tinta);
   border-radius: var(--radio-m);
   font-size: 13.5px;
-  font-weight: 550;
+  font-weight: 600;
   white-space: nowrap;
+  box-shadow: var(--sombra-1);
   transition:
     background var(--transicion),
-    border-color var(--transicion),
     color var(--transicion),
     box-shadow var(--transicion),
     transform var(--transicion);
 }
 
+.boton:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--tinta-sombra);
+}
+
 .boton:active:not(:disabled) {
-  transform: translateY(1px);
+  transform: translate(2px, 2px);
+  box-shadow: none;
 }
 
 .boton:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
 }
 
 .boton--primario {
   background: var(--acento);
   color: var(--sobre-acento);
-  box-shadow: 0 6px 16px -8px color-mix(in srgb, var(--acento) 80%, transparent);
 }
 
 .boton--primario:hover:not(:disabled) {
@@ -117,30 +116,39 @@
 }
 
 .boton--secundario {
-  border-color: var(--borde);
   background: var(--superficie);
   color: var(--texto);
-  box-shadow: var(--sombra-1);
 }
 
 .boton--secundario:hover:not(:disabled) {
-  border-color: var(--borde-fuerte);
-  background: var(--superficie-2);
+  background: var(--resaltador);
 }
 
 .boton--fantasma {
+  border-color: transparent;
+  box-shadow: none;
   color: var(--texto-2);
 }
 
 .boton--fantasma:hover:not(:disabled) {
-  background: var(--superficie-3);
+  border-color: var(--tinta);
+  background: var(--superficie);
   color: var(--texto);
 }
 
 .boton--ia {
-  background: linear-gradient(135deg, var(--acento), var(--acento-2));
+  background: var(--acento-2);
   color: #fff;
-  box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--acento-2) 80%, transparent);
+}
+
+:root[data-theme="dark"] .boton--ia {
+  color: #0c1a33;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .boton--ia {
+    color: #0c1a33;
+  }
 }
 
 .boton--ia:hover:not(:disabled) {
@@ -159,10 +167,10 @@
   min-width: 20px;
   height: 20px;
   padding: 0 5px;
-  border: 1px solid var(--borde);
+  border: 1px solid var(--tinta);
   border-bottom-width: 2px;
-  border-radius: 5px;
-  background: var(--superficie-2);
+  border-radius: 4px;
+  background: var(--superficie);
   font-family: var(--fuente-mono);
   font-size: 10.5px;
   line-height: 1;
@@ -173,31 +181,46 @@
 
 .segmentado {
   display: inline-flex;
-  padding: 3px;
+  overflow: hidden;
+  border: var(--trazo) solid var(--tinta);
   border-radius: var(--radio-m);
-  background: var(--superficie-3);
+  background: var(--superficie);
 }
 
 .segmentado__opcion {
-  padding: 5px 12px;
-  border-radius: var(--radio-s);
+  padding: 6px 14px;
   font-size: 12.5px;
-  font-weight: 500;
+  font-weight: 550;
   color: var(--texto-3);
   transition:
     background var(--transicion),
-    color var(--transicion),
-    box-shadow var(--transicion);
+    color var(--transicion);
+}
+
+.segmentado__opcion + .segmentado__opcion {
+  border-left: var(--trazo) solid var(--tinta);
 }
 
 .segmentado__opcion:hover {
   color: var(--texto);
+  background: var(--superficie-3);
 }
 
 .segmentado__opcion[aria-pressed="true"] {
-  background: var(--superficie);
-  color: var(--texto);
-  box-shadow: var(--sombra-1), 0 0 0 1px var(--borde);
+  background: var(--tinta-sombra);
+  color: var(--fondo);
+}
+
+:root[data-theme="dark"] .segmentado__opcion[aria-pressed="true"] {
+  background: var(--acento);
+  color: var(--sobre-acento);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .segmentado__opcion[aria-pressed="true"] {
+    background: var(--acento);
+    color: var(--sobre-acento);
+  }
 }
 
 .segmentado--ancho {
@@ -206,14 +229,14 @@
   width: 100%;
 }
 
-/* --- Campos de formulario --------------------------------------------------- */
+/* --- Campos de formulario (línea de cuaderno) ------------------------------- */
 
 .campo {
   width: 100%;
   height: 40px;
   padding: 0 12px;
-  border: 1px solid var(--borde);
-  border-radius: var(--radio-m);
+  border: var(--trazo) solid var(--borde-fuerte);
+  border-radius: var(--radio-s);
   background: var(--superficie);
   font-size: 14px;
   color: var(--texto);
@@ -228,15 +251,17 @@
 }
 
 .campo:focus {
-  border-color: var(--acento);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--acento) 16%, transparent);
+  border-color: var(--tinta);
+  box-shadow: 3px 3px 0 var(--acento);
 }
 
 .etiqueta {
   display: block;
   margin-bottom: 6px;
-  font-size: 12.5px;
-  font-weight: 550;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: var(--texto-2);
 }
 
@@ -252,18 +277,18 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  padding: 4px 10px;
-  border: 1px solid var(--borde);
+  padding: 3px 10px;
+  border: 1px solid var(--tinta);
   border-radius: 999px;
   background: var(--superficie);
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 550;
   color: var(--texto-2);
 }
 
 .punto {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   flex-shrink: 0;
   border-radius: 50%;
   background: var(--texto-3);
@@ -271,44 +296,27 @@
 
 .punto--ok {
   background: var(--exito);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--exito) 20%, transparent);
 }
 
 .punto--aviso {
   background: var(--aviso);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--aviso) 20%, transparent);
 }
 
 .punto--error {
   background: var(--error);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--error) 20%, transparent);
 }
 
 .punto--cargando {
   animation: pulso 1.2s ease-in-out infinite;
 }
 
-.estado-servicio {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 12.5px;
-  color: var(--texto-2);
-}
-
-.estado-servicio__valor {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  color: var(--texto-3);
-}
-
 /* --- Avisos ----------------------------------------------------------------- */
 
 .aviso {
   padding: 10px 14px;
-  border-radius: var(--radio-m);
+  border: 1px solid currentColor;
+  border-left-width: 4px;
+  border-radius: var(--radio-s);
   font-size: 13px;
   line-height: 1.45;
 }
@@ -331,23 +339,23 @@
 .aviso--info {
   background: var(--superficie-2);
   color: var(--texto-2);
-  border: 1px solid var(--borde);
+  border-color: var(--borde-fuerte);
 }
 
 .vacio {
-  padding: 28px 16px;
-  border: 1px dashed var(--borde-fuerte);
+  padding: 32px 16px;
+  border: 2px dashed var(--borde-fuerte);
   border-radius: var(--radio-l);
+  font-family: var(--fuente-mano);
+  font-size: 21px;
   text-align: center;
-  font-size: 13.5px;
   color: var(--texto-3);
 }
 
-/* --- Tablas ----------------------------------------------------------------- */
+/* --- Tablas (renglones de cuaderno) ----------------------------------------- */
 
 .tabla-envoltura {
   overflow-x: auto;
-  border-top: 1px solid var(--borde);
 }
 
 .tabla-envoltura--alta {
@@ -363,13 +371,13 @@
 .tabla th {
   position: sticky;
   top: 0;
-  padding: 10px 14px;
-  background: var(--superficie-2);
-  border-bottom: 1px solid var(--borde);
+  padding: 11px 14px;
+  background: var(--superficie-3);
+  border-bottom: var(--trazo) solid var(--tinta);
   font-size: 12px;
   font-weight: 600;
   text-align: right;
-  color: var(--texto-3);
+  color: var(--texto);
   white-space: nowrap;
 }
 
@@ -382,12 +390,12 @@
 
 .tabla th:first-child,
 .tabla td:first-child {
-  padding-left: 22px;
+  padding-left: 24px;
 }
 
 .tabla th:last-child,
 .tabla td:last-child {
-  padding-right: 22px;
+  padding-right: 24px;
 }
 
 .tabla--izquierda th,
@@ -400,7 +408,7 @@
 }
 
 .tabla tbody tr:hover {
-  background: var(--superficie-2);
+  background: color-mix(in srgb, var(--resaltador) 45%, transparent);
 }
 
 .tabla tbody tr:last-child td {

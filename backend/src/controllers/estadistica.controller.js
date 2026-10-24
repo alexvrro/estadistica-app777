@@ -1,5 +1,5 @@
 const { analizar } = require('../services/estadistica.service');
-const { generarInterpretacion } = require('../services/ia.service');
+const { generarInterpretacion, responderChat } = require('../services/ia.service');
 const { registrar, resumenAnalisis } = require('../services/historial.service');
 const { normalizarDatos, normalizarOpciones, ErrorValidacion } = require('../utils/validacion');
 const { MUESTRA_EJEMPLO } = require('../data/muestra');
@@ -42,9 +42,35 @@ async function interpretar(req, res, next) {
   }
 }
 
+/** Conversación del chat: hasta 20 mensajes de 2000 caracteres; el último es del usuario. */
+function normalizarMensajes(mensajes) {
+  if (!Array.isArray(mensajes) || !mensajes.length) throw new ErrorValidacion('"mensajes" debe ser una lista con al menos una pregunta.');
+  const lista = mensajes.slice(-20).map((m) => ({
+    rol: m?.rol === 'tutor' ? 'tutor' : 'usuario',
+    texto: String(m?.texto ?? '').trim().slice(0, 2000),
+  }));
+  if (lista.at(-1).rol !== 'usuario' || !lista.at(-1).texto) throw new ErrorValidacion('Escribe una pregunta.');
+  // Los proveedores exigen que la conversación empiece con el usuario
+  while (lista[0].rol !== 'usuario') lista.shift();
+  return lista;
+}
+
+/** POST /api/estadistica/chat — pregunta de seguimiento al tutor sobre el análisis actual. */
+async function chat(req, res, next) {
+  try {
+    const mensajes = normalizarMensajes(req.body?.mensajes);
+    const resultados = procesar(req.body);
+    const respuesta = await responderChat(resultados, req.body?.contexto || {}, mensajes);
+    res.json(respuesta);
+    registrar('CHAT_TUTOR', mensajes.at(-1).texto.slice(0, 200));
+  } catch (err) {
+    next(err);
+  }
+}
+
 /** GET /api/estadistica/ejemplo */
 function ejemplo(_req, res) {
   res.json({ datos: MUESTRA_EJEMPLO, contexto: { variable: 'tiempo de respuesta de un servidor', unidad: 'ms' } });
 }
 
-module.exports = { analizarDatos, interpretar, ejemplo, procesar };
+module.exports = { analizarDatos, interpretar, chat, ejemplo, procesar, normalizarMensajes };

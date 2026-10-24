@@ -2,10 +2,11 @@ import { useState } from 'react';
 import Tarjeta, { Aviso, Boton } from './Tarjeta';
 import Icono from './Icono';
 import Markdown from './Markdown';
+import ChatTutor from './ChatTutor';
 
 const NOMBRES = { anthropic: 'Claude (Anthropic)', gemini: 'Google Gemini', local: 'Modo local' };
 
-export default function TutorIA({ interpretacion, cargando, error, onGenerar, salud }) {
+export default function TutorIA({ interpretacion, cargando, error, onGenerar, salud, payload, contexto, claveChat }) {
   const [copiado, setCopiado] = useState(false);
   const iaLista = salud?.ia?.configurada;
 
@@ -89,6 +90,9 @@ export default function TutorIA({ interpretacion, cargando, error, onGenerar, sa
           </div>
         </>
       )}
+
+      {/* La conversación se reinicia cuando cambian los datos (claveChat) */}
+      <ChatTutor key={claveChat} payload={payload} contexto={contexto} />
     </Tarjeta>
   );
 }

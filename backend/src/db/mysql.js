@@ -56,6 +56,15 @@ const TABLAS = [
      opciones    TEXT NOT NULL,
      resultado   LONGTEXT NOT NULL
    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
+
+  `CREATE TABLE IF NOT EXISTS practicas (
+     id          INT AUTO_INCREMENT PRIMARY KEY,
+     creado_en   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+     n           INT NOT NULL,
+     aciertos    INT NOT NULL,
+     total       INT NOT NULL,
+     detalle     TEXT NOT NULL
+   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 ];
 
 /** Crea las tablas si no existen. Devuelve false si MySQL no está configurado. */

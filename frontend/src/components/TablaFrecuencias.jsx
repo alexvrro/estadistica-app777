@@ -2,13 +2,55 @@ import { Fragment, useState } from 'react';
 import Tarjeta, { Boton } from './Tarjeta';
 import Icono from './Icono';
 import { num } from '../utils/formato';
+import { crearXlsx, descargarBlob } from '../utils/xlsx';
+
+/** Libro de Excel con la tabla, las medidas y los datos (valores numéricos, no texto). */
+function exportarExcel(resultado, contexto) {
+  const { filas, totales, parametros: p, medidas: m, datos } = resultado;
+  const discreto = p.modo === 'discreto';
+  const encabezado = ['Clase', 'Intervalo', 'Li', 'Ls', ...(discreto ? ['LRi', 'LRs'] : []), 'fi', 'Fi', 'xi', 'xi·fi', 'xi²', 'xi²·fi', 'fr', 'fr %', 'Fr % acum.'];
+  const tabla = [
+    encabezado,
+    ...filas.map((f) => [f.clase, f.intervalo, f.li, f.ls, ...(discreto ? [f.lri, f.lrs] : []), f.fi, f.Fi, f.xi, f.xiFi, f.xi2, f.xi2Fi, f.fr, f.frPct, f.FrPct]),
+    ['Σ', '', '', '', ...(discreto ? ['', ''] : []), totales.fi, '', '', totales.xiFi, '', totales.xi2Fi, totales.fr, totales.frPct, ''],
+  ];
+
+  const t = m.tendenciaCentral;
+  const d = m.dispersion;
+  const medidas = [
+    ['Medida', 'Símbolo', 'Valor', 'Procedimiento'],
+    ['Tamaño de muestra', 'n', p.n, ''],
+    ['Número de clases', 'k', p.k, p.pasos.sturges],
+    ['Amplitud', 'A', p.amplitud, p.pasos.amplitud],
+    ['Media', 'x̄', t.media.valor, t.media.pasos.join(' · ')],
+    ['Mediana', 'Me', t.mediana.valor, t.mediana.pasos.join(' · ')],
+    ...t.moda.valores.map((mo, i) => [`Moda${t.moda.valores.length > 1 ? ` ${i + 1}` : ''}`, 'Mo', mo.valor, mo.pasos.join(' · ')]),
+    ['Varianza muestral', 's²', d.varianza.valor, d.varianza.pasos.join(' · ')],
+    ['Desviación estándar', 's', d.desviacion.valor, d.desviacion.pasos.join(' · ')],
+    ['Coeficiente de variación (%)', 'CV', d.coeficienteVariacion.valor, d.coeficienteVariacion.pasos.join(' · ')],
+    ['Rango intercuartil', 'RIC', d.rangoIntercuartil.valor, d.rangoIntercuartil.pasos.join(' · ')],
+    ...m.posicion.cuartiles.map((q) => [`Cuartil ${q.k}`, `Q${q.k}`, q.valor, q.pasos.join(' · ')]),
+    ...m.posicion.percentiles.map((q) => [`Percentil ${q.k}`, `P${q.k}`, q.valor, q.pasos.join(' · ')]),
+    ...m.posicion.deciles.map((q) => [`Decil ${q.k}`, `D${q.k}`, q.valor, q.pasos.join(' · ')]),
+    ['Asimetría de Pearson', 'Sk', m.forma.asimetriaPearson.valor, m.forma.asimetriaPearson.pasos.join(' · ')],
+    [`Curtosis (${m.forma.curtosis.tipo})`, 'g2', m.forma.curtosis.valor, m.forma.curtosis.pasos.join(' · ')],
+  ];
+
+  const titulo = contexto?.variable ? `${contexto.variable}${contexto.unidad ? ` (${contexto.unidad})` : ''}` : 'Datos';
+  const libro = crearXlsx([
+    { nombre: 'Tabla de frecuencias', filas: tabla, encabezado: true },
+    { nombre: 'Medidas', filas: medidas, encabezado: true },
+    { nombre: 'Datos', filas: [[titulo], ...datos.ordenados.map((x) => [x])], encabezado: true },
+  ]);
+  descargarBlob(libro, `distribucion-frecuencias-n${p.n}.xlsx`);
+}
 
 /**
  * Tabla de distribución de frecuencias para datos agrupados.
  * - Pase el mouse por una fila para resaltarla en el histograma.
  * - Haga clic en una fila para ver los datos que caen en esa clase.
  */
-export default function TablaFrecuencias({ resultado, decimales: d, claseResaltada, setClaseResaltada }) {
+export default function TablaFrecuencias({ resultado, decimales: d, claseResaltada, setClaseResaltada, contexto }) {
   const { filas, totales, parametros, datos } = resultado;
   const discreto = parametros.modo === 'discreto';
   const [abierta, setAbierta] = useState(null);
@@ -64,10 +106,16 @@ export default function TablaFrecuencias({ resultado, decimales: d, claseResalta
       titulo="Tabla de distribución de frecuencias"
       subtitulo={`${filas.length} clases · intervalos ${discreto ? 'discretos con límites reales' : 'continuos [Li, Ls), último cerrado'} · clic en una fila para ver sus datos`}
       acciones={
-        <Boton chico onClick={copiarCSV}>
-          <Icono nombre="copiar" tamano={15} />
-          {copiado ? 'Copiado' : 'Copiar CSV'}
-        </Boton>
+        <>
+          <Boton chico onClick={copiarCSV}>
+            <Icono nombre="copiar" tamano={15} />
+            {copiado ? 'Copiado' : 'Copiar CSV'}
+          </Boton>
+          <Boton chico onClick={() => exportarExcel(resultado, contexto)} title="Descargar tabla, medidas y datos en un libro de Excel">
+            <Icono nombre="descargar" tamano={15} />
+            Excel
+          </Boton>
+        </>
       }
       sinRelleno
     >

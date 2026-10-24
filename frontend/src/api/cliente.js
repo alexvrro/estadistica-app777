@@ -27,4 +27,9 @@ export const api = {
   guardarRegistro: (payload) => peticion('/api/registros', { method: 'POST', body: JSON.stringify(payload) }),
   eliminarRegistro: (id) => peticion(`/api/registros/${id}`, { method: 'DELETE' }),
   historial: (limite = 100) => peticion(`/api/historial?limite=${limite}`),
+  chat: (payload) => peticion('/api/estadistica/chat', { method: 'POST', body: JSON.stringify(payload) }),
+  comparar: (a, b) => peticion('/api/registros/comparar', { method: 'POST', body: JSON.stringify({ a, b }) }),
+  guardarPractica: (intento) => peticion('/api/practicas', { method: 'POST', body: JSON.stringify(intento) }),
+  progresoPracticas: () => peticion('/api/practicas/progreso'),
+  reiniciarPracticas: () => peticion('/api/practicas', { method: 'DELETE' }),
 };

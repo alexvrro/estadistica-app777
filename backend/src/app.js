@@ -5,6 +5,7 @@ const cors = require('cors');
 const estadisticaRoutes = require('./routes/estadistica.routes');
 const registroRoutes = require('./routes/registro.routes');
 const historialRoutes = require('./routes/historial.routes');
+const practicaRoutes = require('./routes/practica.routes');
 const { configurado: mysqlConfigurado } = require('./db/mysql');
 const { claveReal } = require('./utils/entorno');
 
@@ -26,6 +27,7 @@ app.get('/api/salud', (_req, res) => {
 app.use('/api/estadistica', estadisticaRoutes);
 app.use('/api/registros', registroRoutes);
 app.use('/api/historial', historialRoutes);
+app.use('/api/practicas', practicaRoutes);
 
 // En producción el mismo servidor entrega el frontend compilado (npm run build)
 const DIST = path.join(__dirname, '..', '..', 'frontend', 'dist');

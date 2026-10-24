@@ -5,6 +5,7 @@ const router = Router();
 
 router.get('/', ctrl.listar);
 router.post('/', ctrl.guardar);
+router.post('/comparar', ctrl.comparar);
 router.get('/:id', ctrl.obtener);
 router.delete('/:id', ctrl.eliminar);
 

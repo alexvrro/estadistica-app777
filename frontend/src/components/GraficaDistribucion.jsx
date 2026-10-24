@@ -4,12 +4,15 @@ import Icono from './Icono';
 import { descargarSvgComoPng } from '../utils/exportar';
 import { num } from '../utils/formato';
 import { conMacron } from './Simbolo';
+import { claveTalloHoja, talloHoja } from '../utils/talloHoja';
 
 /**
  * Panel interactivo de la distribución, en SVG puro:
  *   - Frecuencias: columnas por clase (fi o fr %) con x̄, Me y Mo.
- *   - Acumulada: curva Fr % acumulada con la lectura de Q1, Q2 y Q3.
+ *   - Polígono: une las marcas de clase (xi, fi) y se cierra en las clases vecinas vacías.
+ *   - Ojiva: curva Fr % acumulada con la lectura de Q1, Q2 y Q3.
  *   - Caja: diagrama de caja (bigotes hasta las vallas de Tukey) con la media y los atípicos.
+ *   - Tallo y hoja: los datos sin agrupar (HTML, no SVG).
  * Paleta validada para daltonismo (ver estilos/base.css, variables --graf-*).
  */
 
@@ -34,8 +37,10 @@ const C = {
 
 const VISTAS = [
   ['frecuencias', 'Frecuencias'],
-  ['acumulada', 'Acumulada'],
+  ['poligono', 'Polígono'],
+  ['acumulada', 'Ojiva'],
   ['caja', 'Caja'],
+  ['tallo', 'Tallo y hoja'],
 ];
 
 /** Paso "redondo" (1, 2, 2.5, 5 × 10ⁿ) para ~5 marcas del eje. */
@@ -253,6 +258,137 @@ function VistaFrecuencias({ resultado, decimales, claseResaltada, refs, unidad }
         ))}
       </svg>
       <Tooltip punto={punto} alto={H} />
+    </div>
+  );
+}
+
+function VistaPoligono({ resultado, decimales, unidad }) {
+  const [activo, setActivo] = useState(null);
+  const W = useContext(AnchoCtx);
+  const { filas } = resultado;
+  const H = 340;
+  const top = 24;
+  const valor = (f) => (unidad === 'fi' ? f.fi : f.frPct);
+  const A = filas[0].lrs - filas[0].lri;
+
+  // Se cierra en las marcas de clase vecinas (frecuencia 0) para que el área sea la del histograma
+  const puntos = [
+    { x: filas[0].xi - A, y: 0, vacio: true },
+    ...filas.map((f) => ({ x: f.xi, y: valor(f), f })),
+    { x: filas.at(-1).xi + A, y: 0, vacio: true },
+  ];
+  const max = Math.max(...filas.map(valor));
+  const paso = pasoBonito(max, unidad === 'fi');
+  const tope = Math.ceil(max / paso) * paso || 1;
+  const x0 = puntos[0].x;
+  const x1 = puntos.at(-1).x;
+  const sx = (x) => M.l + ((x - x0) / (x1 - x0)) * (W - M.l - M.r);
+  const sy = (y) => H - M.b - (y / tope) * (H - top - M.b);
+  const ticks = Array.from({ length: Math.round(tope / paso) + 1 }, (_, i) => +(i * paso).toFixed(6));
+  const linea = puntos.map((p) => `${sx(p.x)},${sy(p.y)}`).join(' ');
+  const fmt = (v) => (unidad === 'fi' ? v : `${num(v, 1)} %`);
+
+  const p = activo != null ? puntos[activo] : null;
+  const punto = p && {
+    x: sx(p.x),
+    y: sy(p.y),
+    titulo: p.vacio ? `Marca de clase vecina ${num(p.x, decimales, true)}` : `Clase ${p.f.clase} · ${p.f.intervalo}`,
+    filas: p.vacio
+      ? [[C.eje, 0, 'sin datos (cierra el polígono)']]
+      : [
+          [C.datos, num(p.x, decimales, true), 'xi (marca de clase)'],
+          [C.datos, fmt(p.y), unidad === 'fi' ? 'fi' : 'fr %'],
+        ],
+  };
+
+  return (
+    <div className="grafica__lienzo">
+      <svg viewBox={`0 0 ${W} ${H}`} className="grafica__svg" role="img" aria-label="Polígono de frecuencias">
+        {ticks.map((t) => (
+          <g key={t}>
+            {t > 0 && <line x1={M.l} x2={W - M.r} y1={sy(t)} y2={sy(t)} stroke={C.rejilla} />}
+            <text x={M.l - 10} y={sy(t)} dy="0.32em" textAnchor="end" className="num" fontSize="11" fill={C.tenue}>
+              {unidad === 'fi' ? t : `${num(t, 1, true)} %`}
+            </text>
+          </g>
+        ))}
+        <text x={14} y={(top + H - M.b) / 2} textAnchor="middle" fontSize="11" fill={C.tenue} transform={`rotate(-90 14 ${(top + H - M.b) / 2})`}>
+          {unidad === 'fi' ? 'Frecuencia absoluta (fi)' : 'Frecuencia relativa (fr %)'}
+        </text>
+
+        {/* histograma de fondo, tenue, para ver que el polígono pasa por el centro de cada columna */}
+        {filas.map((f) => (
+          <rect key={f.clase} x={sx(f.lri) + 1} y={sy(valor(f))} width={Math.max(1, sx(f.lrs) - sx(f.lri) - 2)} height={sy(0) - sy(valor(f))} fill={C.datos} opacity="0.12" />
+        ))}
+
+        <polygon points={`${linea}`} fill={C.datos} opacity="0.08" />
+        <polyline points={linea} fill="none" stroke={C.datos} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+        {puntos.map((pt, i) => (
+          <circle
+            key={i}
+            cx={sx(pt.x)}
+            cy={sy(pt.y)}
+            r={activo === i ? 7 : 4.5}
+            fill={pt.vacio ? C.superficie : C.datos}
+            stroke={pt.vacio ? C.datos : C.superficie}
+            strokeWidth="2"
+          />
+        ))}
+
+        <EjeX limites={puntos.map((pt) => pt.x)} sx={sx} y={sy(0)} decimales={decimales} titulo="Marcas de clase (xi)" />
+
+        {puntos.map((pt, i) => {
+          const izq = i === 0 ? sx(pt.x) : (sx(puntos[i - 1].x) + sx(pt.x)) / 2;
+          const der = i === puntos.length - 1 ? sx(pt.x) : (sx(pt.x) + sx(puntos[i + 1].x)) / 2;
+          return (
+            <rect
+              key={i}
+              x={izq}
+              y={top}
+              width={Math.max(8, der - izq)}
+              height={sy(0) - top}
+              fill="transparent"
+              tabIndex={0}
+              aria-label={pt.vacio ? 'Punto de cierre del polígono' : `Clase ${pt.f.clase}: ${fmt(pt.y)}`}
+              className="grafica__zona"
+              onPointerEnter={() => setActivo(i)}
+              onPointerLeave={() => setActivo(null)}
+              onFocus={() => setActivo(i)}
+              onBlur={() => setActivo(null)}
+            />
+          );
+        })}
+      </svg>
+      <Tooltip punto={punto} alto={H} />
+    </div>
+  );
+}
+
+function VistaTalloHoja({ resultado }) {
+  const diagrama = talloHoja(resultado.datos.ordenados);
+  const maxHojas = Math.max(...diagrama.filas.map((f) => f.hojas.length));
+  return (
+    <div className="tallo">
+      <div className="tallo__diagrama num" role="table" aria-label="Diagrama de tallo y hoja">
+        {diagrama.filas.map((f) => (
+          <div key={f.tallo} className="tallo__fila" role="row">
+            <span className="tallo__tallo" role="cell">
+              {f.tallo}
+            </span>
+            <span className="tallo__hojas" role="cell">
+              {f.hojas.join(' ') || ' '}
+            </span>
+            <span className="tallo__cuenta" role="cell" title="Cantidad de hojas">
+              {f.hojas.length}
+            </span>
+            <span className="tallo__barra" aria-hidden="true" style={{ width: `${(f.hojas.length / maxHojas) * 100}%` }} />
+          </div>
+        ))}
+      </div>
+      <p className="tallo__clave">
+        Clave: <b className="num">{claveTalloHoja(diagrama)}</b> · unidad de la hoja = {diagrama.unidad}
+        {diagrama.redondeados ? ' · los datos se redondearon a la unidad de la hoja' : ''}
+      </p>
     </div>
   );
 }
@@ -530,12 +666,19 @@ export default function GraficaDistribucion({ resultado, decimales, claseResalta
 
   const textos = {
     frecuencias: ['Distribución de frecuencias', 'Pasa el cursor sobre una clase para ver su detalle'],
-    acumulada: ['Frecuencia acumulada', 'Los cuartiles se leen donde la curva cruza 25 %, 50 % y 75 %'],
+    poligono: ['Polígono de frecuencias', 'Une las marcas de clase; se cierra en las clases vecinas con frecuencia 0'],
+    acumulada: ['Ojiva (frecuencia acumulada)', 'Los cuartiles se leen donde la curva cruza 25 %, 50 % y 75 %'],
     caja: ['Diagrama de caja', 'Resumen de cinco números: mín, Q1, Me, Q3 y máx'],
+    tallo: ['Diagrama de tallo y hoja', 'Los datos originales, sin agrupar, ordenados por tallo'],
   };
 
   const leyendas = {
     frecuencias: [{ color: C.datos, texto: unidad === 'fi' ? 'fi por clase' : 'fr % por clase', forma: 'caja' }, ...refs.map((r) => ({ color: r.color, texto: r.etiqueta }))],
+    poligono: [
+      { color: C.datos, texto: unidad === 'fi' ? 'Polígono de fi' : 'Polígono de fr %' },
+      { color: C.datos, texto: 'Histograma (fondo)', forma: 'caja' },
+    ],
+    tallo: [],
     acumulada: [
       { color: C.datos, texto: 'Fr % acumulada' },
       { color: C.mediana, texto: `Q2 = Me = ${num(mediana, decimales)}` },
@@ -551,6 +694,10 @@ export default function GraficaDistribucion({ resultado, decimales, claseResalta
 
   const descargarPng = async () => {
     setErrorPng('');
+    if (vista === 'tallo') {
+      setErrorPng('El diagrama de tallo y hoja no es una imagen: usa el reporte PDF para guardarlo.');
+      return;
+    }
     try {
       await descargarSvgComoPng(caja.current.querySelector('svg'), {
         nombre: `grafica-${vista}`,
@@ -579,11 +726,11 @@ export default function GraficaDistribucion({ resultado, decimales, claseResalta
       subtitulo={textos[vista][1]}
       acciones={
         <>
-          {vista === 'frecuencias' && (
+          {(vista === 'frecuencias' || vista === 'poligono') && (
             <Segmentado etiqueta="Eje vertical" opciones={[['fi', 'fi'], ['fr', 'fr %']]} valor={unidad} onCambio={setUnidad} />
           )}
           <Segmentado etiqueta="Tipo de gráfica" opciones={VISTAS} valor={vista} onCambio={setVista} />
-          <Boton chico onClick={descargarPng} title="Descargar la gráfica como imagen PNG">
+          <Boton chico onClick={descargarPng} disabled={vista === 'tallo'} title="Descargar la gráfica como imagen PNG">
             <Icono nombre="descargar" tamano={15} />
             PNG
           </Boton>
@@ -595,11 +742,13 @@ export default function GraficaDistribucion({ resultado, decimales, claseResalta
           {vista === 'frecuencias' && (
             <VistaFrecuencias resultado={resultado} decimales={decimales} claseResaltada={claseResaltada} refs={refs} unidad={unidad} />
           )}
+          {vista === 'poligono' && <VistaPoligono resultado={resultado} decimales={decimales} unidad={unidad} />}
           {vista === 'acumulada' && <VistaAcumulada resultado={resultado} decimales={decimales} cuartiles={cuartiles} />}
+          {vista === 'tallo' && <VistaTalloHoja resultado={resultado} />}
           {vista === 'caja' && <VistaCaja resultado={resultado} decimales={decimales} cuartiles={cuartiles} media={media} ric={ric} atipicos={atipicos} />}
         </AnchoCtx.Provider>
       </div>
-      <Leyenda items={leyendas[vista]} />
+      {leyendas[vista].length > 0 && <Leyenda items={leyendas[vista]} />}
       {errorPng && (
         <Aviso tipo="error" className="entrada__error">
           {errorPng}

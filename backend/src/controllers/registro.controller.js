@@ -1,6 +1,7 @@
 const repo = require('../repositories/registro.repo');
 const { procesar } = require('./estadistica.controller');
 const { registrar } = require('../services/historial.service');
+const { compararAnalisis } = require('../services/ia.service');
 
 const idValido = (v) => (Number.isInteger(Number(v)) && Number(v) > 0 ? Number(v) : null);
 
@@ -71,4 +72,23 @@ async function eliminar(req, res, next) {
   }
 }
 
-module.exports = { guardar, listar, obtener, eliminar };
+/** POST /api/registros/comparar { a, b } — comparación redactada de dos registros guardados. */
+async function comparar(req, res, next) {
+  try {
+    const a = idValido(req.body?.a);
+    const b = idValido(req.body?.b);
+    if (!a || !b) return res.status(400).json({ error: 'Elige dos registros para comparar.' });
+    if (a === b) return res.status(400).json({ error: 'Elige dos registros distintos.' });
+    const [filaA, filaB] = await Promise.all([repo.obtener(a), repo.obtener(b)]);
+    if (!filaA || !filaB) return res.status(404).json({ error: 'Registro no encontrado' });
+
+    const ctx = (f, letra) => ({ variable: f.variable || `registro #${f.id} (${letra})`, unidad: f.unidad || '' });
+    const texto = await compararAnalisis(JSON.parse(filaA.resultado), ctx(filaA, 'A'), JSON.parse(filaB.resultado), ctx(filaB, 'B'));
+    res.json(texto);
+    registrar('COMPARACION', `#${a} vs #${b} · proveedor=${texto.proveedor}`);
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { guardar, listar, obtener, eliminar, comparar };

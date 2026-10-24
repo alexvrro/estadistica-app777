@@ -18,7 +18,7 @@
     display: block !important;
   }
 
-  .lateral,
+  body::before,
   .barra-superior,
   .heroe,
   #bloque-datos,
@@ -47,8 +47,8 @@
     break-after: avoid;
   }
 
-  .principal {
-    margin-left: 0 !important;
+  .kpi {
+    transform: none !important;
   }
 
   .contenido {

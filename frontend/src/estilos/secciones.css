@@ -4,33 +4,35 @@
 
 /* --- Entrada de datos -------------------------------------------------------- */
 
+/* Hoja rayada: los renglones coinciden con el interlineado del texto */
 .entrada__marco {
   position: relative;
-  border: 1px solid var(--borde);
-  border-radius: var(--radio-l);
-  background: var(--superficie-2);
+  border: var(--trazo) solid var(--borde-fuerte);
+  border-radius: var(--radio-m);
+  background:
+    linear-gradient(90deg, transparent 39px, var(--margen) 39px, var(--margen) 41px, transparent 41px),
+    repeating-linear-gradient(transparent 0 23px, var(--borde) 23px 24px) 0 14px,
+    var(--superficie);
   transition:
     border-color var(--transicion),
-    box-shadow var(--transicion),
-    background var(--transicion);
+    box-shadow var(--transicion);
 }
 
 .entrada__marco:focus-within {
-  border-color: var(--acento);
-  background: var(--superficie);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--acento) 14%, transparent);
+  border-color: var(--tinta);
+  box-shadow: 4px 4px 0 var(--acento);
 }
 
 .entrada__area {
   display: block;
   width: 100%;
-  min-height: 104px;
-  padding: 14px 16px 6px;
+  min-height: 120px;
+  padding: 14px 16px 6px 54px;
   border: 0;
   background: transparent;
   font-family: var(--fuente-mono);
   font-size: 14px;
-  line-height: 1.7;
+  line-height: 24px;
   color: var(--texto);
   resize: vertical;
   outline: none;
@@ -68,9 +70,9 @@
   gap: 14px;
   margin-top: 16px;
   padding: 18px;
-  border-radius: var(--radio-l);
+  border-radius: var(--radio-m);
   background: var(--superficie-2);
-  border: 1px solid var(--borde);
+  border: 2px dashed var(--borde-fuerte);
 }
 
 @media (min-width: 640px) {
@@ -143,14 +145,33 @@
   }
 }
 
+/* Fichas tipo tarjeta de índice: línea roja arriba y renglones */
 .kpi {
   position: relative;
   overflow: hidden;
-  padding: 16px;
-  border: 1px solid var(--borde);
-  border-radius: var(--radio-l);
-  background: var(--superficie);
+  padding: 18px 16px 16px;
+  border: var(--trazo) solid var(--tinta);
+  border-radius: var(--radio-s);
+  background:
+    linear-gradient(var(--acento), var(--acento)) 0 0 / 100% 4px no-repeat,
+    var(--superficie);
   box-shadow: var(--sombra-1);
+  transition:
+    transform var(--transicion),
+    box-shadow var(--transicion);
+}
+
+.kpi:nth-child(odd) {
+  transform: rotate(-0.6deg);
+}
+
+.kpi:nth-child(even) {
+  transform: rotate(0.5deg);
+}
+
+.kpi:hover {
+  transform: translate(-2px, -2px) rotate(0deg);
+  box-shadow: var(--sombra-2);
 }
 
 .kpi__cabecera {
@@ -161,16 +182,11 @@
 }
 
 .kpi__simbolo {
-  display: inline-grid;
-  place-items: center;
-  min-width: 28px;
-  height: 24px;
-  padding: 0 7px;
-  border-radius: 7px;
-  background: var(--acento-suave);
-  font-size: 12.5px;
+  font-family: var(--fuente-titulo);
+  font-size: 20px;
   font-weight: 600;
   font-style: italic;
+  line-height: 1;
   color: var(--acento-texto);
 }
 
@@ -278,8 +294,9 @@
 }
 
 .medidas__titulo {
-  font-size: 14.5px;
-  font-weight: 650;
+  font-family: var(--fuente-titulo);
+  font-size: 18px;
+  font-weight: 600;
 }
 
 .medidas__descripcion {
@@ -303,30 +320,33 @@
 .medida {
   --color-medida: var(--borde-fuerte);
   position: relative;
-  padding: 14px 14px 12px 16px;
-  border: 1px solid var(--borde);
-  border-radius: var(--radio-l);
+  padding: 14px 14px 12px 18px;
+  border: var(--trazo) solid var(--borde-fuerte);
+  border-radius: var(--radio-s);
   background: var(--superficie-2);
   transition:
     border-color var(--transicion),
     background var(--transicion),
+    box-shadow var(--transicion),
     transform var(--transicion);
 }
 
 .medida::before {
   content: "";
   position: absolute;
-  top: 14px;
-  bottom: 14px;
-  left: 0;
-  width: 3px;
-  border-radius: 0 3px 3px 0;
+  top: -1.5px;
+  bottom: -1.5px;
+  left: -1.5px;
+  width: 5px;
+  border-radius: var(--radio-s) 0 0 var(--radio-s);
   background: var(--color-medida);
 }
 
 .medida:hover {
-  border-color: var(--borde-fuerte);
+  border-color: var(--tinta);
   background: var(--superficie);
+  box-shadow: var(--sombra-1);
+  transform: translate(-1px, -1px);
 }
 
 .medida--media {
@@ -436,8 +456,8 @@
   z-index: 10;
   min-width: 170px;
   padding: 10px 12px;
-  border: 1px solid var(--borde);
-  border-radius: var(--radio-m);
+  border: var(--trazo) solid var(--tinta);
+  border-radius: var(--radio-s);
   background: var(--superficie);
   box-shadow: var(--sombra-3);
   font-size: 12px;
@@ -541,11 +561,9 @@
   flex-direction: column;
   gap: 12px;
   padding: 18px;
-  border-radius: var(--radio-l);
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--acento) 9%, transparent), color-mix(in srgb, var(--acento-2) 9%, transparent)),
-    var(--superficie-2);
-  border: 1px solid color-mix(in srgb, var(--acento) 18%, var(--borde));
+  border-radius: var(--radio-m);
+  background: color-mix(in srgb, var(--acento-2) 7%, var(--superficie-2));
+  border: 2px dashed color-mix(in srgb, var(--acento-2) 45%, var(--borde));
   font-size: 13.5px;
   color: var(--texto-2);
 }
@@ -553,11 +571,13 @@
 .tutor__icono {
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, var(--acento), var(--acento-2));
-  color: #fff;
+  width: 38px;
+  height: 38px;
+  border: var(--trazo) solid var(--tinta);
+  border-radius: 50%;
+  background: var(--acento-2);
+  color: var(--superficie);
+  box-shadow: var(--sombra-1);
 }
 
 .tutor__nota {
@@ -623,8 +643,9 @@
 
 .md h4 {
   padding-top: 8px;
-  font-size: 15px;
-  font-weight: 650;
+  font-family: var(--fuente-titulo);
+  font-size: 17px;
+  font-weight: 600;
   color: var(--texto);
 }
 
@@ -717,7 +738,12 @@
 }
 
 .contenido-tarjeta {
-  padding: 0 22px 22px;
+  padding: 16px 24px;
+}
+
+.tarjeta__cuerpo--sin-relleno {
+  overflow: hidden;
+  border-radius: 0 0 var(--radio-xl) var(--radio-xl);
 }
 
 /* --- Paleta de comandos ------------------------------------------------------ */
@@ -739,7 +765,7 @@
   width: 100%;
   max-width: 580px;
   overflow: hidden;
-  border: 1px solid var(--borde);
+  border: var(--trazo) solid var(--tinta);
   border-radius: var(--radio-xl);
   background: var(--superficie);
   box-shadow: var(--sombra-3);
@@ -796,8 +822,8 @@
 }
 
 .paleta__item[data-activo="true"] {
-  background: var(--acento-suave);
-  color: var(--acento-texto);
+  background: var(--resaltador);
+  color: var(--texto);
 }
 
 .paleta__item-texto {

@@ -1,26 +1,7 @@
 import Icono, { Logo } from './Icono';
 import { Kbd } from './Tarjeta';
 
-/** Estado del backend, la IA y MySQL (se muestra en el menú lateral). */
-export function EstadoServicios({ salud }) {
-  const caido = salud?.estado === 'caido';
-  const filas = [
-    ['Backend', !salud ? 'cargando' : caido ? 'error' : 'ok', !salud ? 'conectando…' : caido ? 'sin conexión' : 'en línea'],
-    ...(salud?.ia ? [['Tutor IA', salud.ia.configurada ? 'ok' : 'aviso', salud.ia.configurada ? salud.ia.proveedor : 'modo local']] : []),
-    ...(salud?.mysql ? [['MySQL', salud.mysql.configurada ? 'ok' : 'aviso', salud.mysql.configurada ? 'activo' : 'desactivado']] : []),
-  ];
-  return filas.map(([nombre, estado, texto]) => (
-    <div key={nombre} className="estado-servicio">
-      <span>{nombre}</span>
-      <span className="estado-servicio__valor">
-        {texto}
-        <span className={`punto punto--${estado}${estado === 'cargando' ? ' punto--cargando' : ''}`} />
-      </span>
-    </div>
-  ));
-}
-
-/** Chips de estado compactos (en móvil, bajo el título). */
+/** Chips con el estado del backend, la IA y MySQL. */
 export function ChipsServicios({ salud }) {
   const caido = salud?.estado === 'caido';
   const chips = [
@@ -30,59 +11,29 @@ export function ChipsServicios({ salud }) {
   ];
   return chips.map(([estado, texto]) => (
     <span key={texto} className="chip">
-      <span className={`punto punto--${estado}`} />
+      <span className={`punto punto--${estado}${estado === 'cargando' ? ' punto--cargando' : ''}`} />
       {texto}
     </span>
   ));
 }
 
-/** Menú lateral de escritorio con las secciones y el estado de los servicios. */
-export function MenuLateral({ secciones, activa, onIr, salud }) {
-  return (
-    <aside className="lateral">
-      <div className="marca">
-        <Logo />
-        <div>
-          <div className="marca__nombre">Estadística I</div>
-          <span className="marca__detalle">Datos agrupados</span>
-        </div>
-      </div>
-
-      <p className="lateral__titulo">Secciones</p>
-      <nav className="lateral__nav" aria-label="Secciones">
-        {secciones.map(({ id, corto, icono }) => (
-          <button key={id} className="lateral__enlace" aria-current={activa === id ? 'location' : undefined} onClick={() => onIr(id)}>
-            <Icono nombre={icono} />
-            {corto}
-          </button>
-        ))}
-      </nav>
-
-      <div className="lateral__pie">
-        <EstadoServicios salud={salud} />
-      </div>
-    </aside>
-  );
-}
-
-/** Barra superior: migas, buscador de comandos y cambio de tema. */
-export default function Encabezado({ secciones, activa, onIr, onPaleta, oscuro, onTema, onExportar }) {
-  const actual = secciones.find((s) => s.id === activa);
+/** Barra superior: marca, buscador de comandos, estado, tema y pestañas de secciones. */
+export default function Encabezado({ secciones, activa, onIr, onPaleta, oscuro, onTema, onExportar, salud }) {
   return (
     <header className="barra-superior">
       <div className="barra-superior__fila">
-        <div className="barra-superior__marca">
-          <Logo tamano={16} />
-          <span className="marca__nombre">Estadística I</span>
-        </div>
-
-        <div className="migas">
-          <span>Análisis</span>
-          <Icono nombre="flecha" tamano={14} />
-          <strong>{actual?.titulo || 'Distribución de frecuencias'}</strong>
+        <div className="marca">
+          <Logo />
+          <div>
+            <div className="marca__nombre">Estadística I</div>
+            <span className="marca__detalle">cuaderno de datos agrupados</span>
+          </div>
         </div>
 
         <div className="barra-superior__acciones">
+          <div className="barra-superior__estados">
+            <ChipsServicios salud={salud} />
+          </div>
           <button className="buscador" onClick={onPaleta} aria-label="Buscar comandos">
             <Icono nombre="buscar" tamano={16} />
             <span className="buscador__texto">Buscar comandos…</span>
@@ -96,15 +47,16 @@ export default function Encabezado({ secciones, activa, onIr, onPaleta, oscuro, 
               <Icono nombre="imprimir" />
             </button>
           )}
-          <button className="boton-icono" onClick={onTema} aria-label={oscuro ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'} title={oscuro ? 'Tema claro' : 'Tema oscuro'}>
+          <button className="boton-icono" onClick={onTema} aria-label={oscuro ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'} title={oscuro ? 'Cuaderno (claro)' : 'Pizarra (oscuro)'}>
             <Icono nombre={oscuro ? 'sol' : 'luna'} />
           </button>
         </div>
       </div>
 
-      <nav className="nav-movil sin-barra" aria-label="Secciones">
-        {secciones.map(({ id, corto }) => (
-          <button key={id} className="nav-movil__enlace" aria-current={activa === id ? 'location' : undefined} onClick={() => onIr(id)}>
+      <nav className="pestanas sin-barra" aria-label="Secciones">
+        {secciones.map(({ id, corto, icono }) => (
+          <button key={id} className="pestana" aria-current={activa === id ? 'location' : undefined} onClick={() => onIr(id)}>
+            <Icono nombre={icono} tamano={15} />
             {corto}
           </button>
         ))}
