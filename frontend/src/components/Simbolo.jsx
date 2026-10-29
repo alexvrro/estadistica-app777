@@ -9,7 +9,7 @@ export function conMacron(texto, svg = false) {
       ? [parte]
       : [
           svg ? (
-            <tspan key={i} fontFamily="Geist, system-ui, sans-serif">
+            <tspan key={i} fontFamily="IBM Plex Sans, system-ui, sans-serif">
               x̄
             </tspan>
           ) : (

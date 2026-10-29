@@ -5,6 +5,13 @@ export function num(x, d = 2, compacto = false) {
   return compacto ? String(Number(s)) : s;
 }
 
+/** MySQL devuelve la fecha en UTC; se muestra en la hora local del navegador. */
+export function formatearFecha(f) {
+  if (!f) return '—';
+  const d = new Date(f);
+  return Number.isNaN(d.getTime()) ? String(f) : d.toLocaleString('es-MX');
+}
+
 /** Convierte el texto del área de datos en números (para el contador en vivo). */
 export function parsearDatos(texto) {
   const tokens = texto.split(/[\s,;]+/).filter(Boolean);

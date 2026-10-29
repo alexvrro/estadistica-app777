@@ -391,7 +391,6 @@
 
 /* --- Rejillas --------------------------------------------------------------- */
 
-.rejilla-grafica,
 .rejilla-dos {
   display: grid;
   gap: 28px;
@@ -399,11 +398,6 @@
 }
 
 @media (min-width: 1280px) {
-  .rejilla-grafica {
-    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-    align-items: start;
-  }
-
   .rejilla-dos {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: start;

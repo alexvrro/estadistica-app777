@@ -14,7 +14,7 @@ const PORT = Number(process.env.PORT) || 3001;
 
   try {
     if (await iniciar()) {
-      console.log('✔ MySQL conectado: tablas historial_operaciones y registros_analisis listas');
+      console.log('✔ MySQL conectado: tablas historial_operaciones, registros_analisis y practicas listas');
     } else {
       console.warn('⚠ MYSQL_DATABASE vacío: el registro y el historial no funcionarán');
     }

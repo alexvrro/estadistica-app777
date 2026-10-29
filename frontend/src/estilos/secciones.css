@@ -554,84 +554,8 @@
   font-weight: 600;
 }
 
-/* --- Tutor de IA ------------------------------------------------------------- */
+/* --- Markdown (comparación redactada con IA) ------------------------------ */
 
-.tutor__presentacion {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 18px;
-  border-radius: var(--radio-m);
-  background: color-mix(in srgb, var(--acento-2) 7%, var(--superficie-2));
-  border: 2px dashed color-mix(in srgb, var(--acento-2) 45%, var(--borde));
-  font-size: 13.5px;
-  color: var(--texto-2);
-}
-
-.tutor__icono {
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
-  border: var(--trazo) solid var(--tinta);
-  border-radius: 50%;
-  background: var(--acento-2);
-  color: var(--superficie);
-  box-shadow: var(--sombra-1);
-}
-
-.tutor__nota {
-  font-size: 12.5px;
-  color: var(--texto-3);
-}
-
-.tutor__meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 14px;
-  font-size: 12px;
-}
-
-.tutor__proveedor {
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: var(--acento-suave);
-  font-weight: 550;
-  color: var(--acento-texto);
-}
-
-.tutor__modelo {
-  color: var(--texto-3);
-}
-
-.tutor__texto {
-  max-height: 560px;
-  overflow-y: auto;
-  padding-right: 4px;
-}
-
-.esqueleto {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.esqueleto__linea {
-  height: 12px;
-  border-radius: 6px;
-  background: var(--superficie-3);
-  animation: pulso 1.4s ease-in-out infinite;
-}
-
-.esqueleto__nota {
-  padding-top: 6px;
-  font-size: 12.5px;
-  color: var(--texto-3);
-}
-
-/* Markdown del tutor */
 .md {
   display: flex;
   flex-direction: column;
@@ -1017,4 +941,317 @@
   font-size: 10.5px;
   line-height: 1.6;
   color: var(--texto-2);
+}
+
+/* --- Modo práctica: enunciado y progreso -------------------------------------- */
+
+.practica__enunciado {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border-left: 4px solid var(--acento-2);
+  background: color-mix(in srgb, var(--acento-2) 7%, var(--superficie-2));
+  font-size: 14px;
+  color: var(--texto-2);
+}
+
+.practica__progreso {
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 2px dotted var(--borde-fuerte);
+}
+
+.practica__progreso .medidas__titulo {
+  margin-bottom: 12px;
+}
+
+.progreso__vacio {
+  font-family: var(--fuente-mano);
+  font-size: 19px;
+  color: var(--texto-3);
+}
+
+.progreso__resumen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 28px;
+  margin-bottom: 16px;
+}
+
+.progreso__resumen > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.progreso__cifra {
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.progreso__etiqueta {
+  font-family: var(--fuente-mano);
+  font-size: 17px;
+  color: var(--acento-2);
+}
+
+.progreso__reiniciar {
+  margin-left: auto;
+}
+
+.progreso__barras {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 768px) {
+  .progreso__barras {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 28px;
+  }
+}
+
+.progreso__barra {
+  display: grid;
+  grid-template-columns: 44px 1fr 48px;
+  align-items: center;
+  gap: 10px;
+}
+
+.progreso__medida {
+  font-style: italic;
+  color: var(--texto-2);
+}
+
+.progreso__pista {
+  height: 14px;
+  overflow: hidden;
+  border: 1px solid var(--tinta);
+  border-radius: 3px;
+  background: var(--superficie-3);
+}
+
+.progreso__relleno {
+  display: block;
+  height: 100%;
+  background: var(--exito);
+  transition: width 400ms cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+.progreso__relleno--bajo {
+  background: var(--error);
+}
+
+.progreso__pct {
+  font-size: 12.5px;
+  text-align: right;
+  color: var(--texto-2);
+}
+
+.progreso__consejo {
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--texto-2);
+}
+
+/* --- Comparar dos análisis --------------------------------------------------------- */
+
+.comparar__selectores {
+  display: grid;
+  gap: 12px;
+}
+
+@media (min-width: 900px) {
+  .comparar__selectores {
+    grid-template-columns: 1fr 1fr auto;
+    align-items: center;
+  }
+}
+
+.comparar__selector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.comparar__selector select {
+  min-width: 0;
+  cursor: pointer;
+}
+
+.comparar__letra {
+  display: inline-grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: var(--trazo) solid var(--tinta);
+  border-radius: 50%;
+  font-family: var(--fuente-titulo);
+  font-size: 14px;
+  font-weight: 700;
+  font-style: normal;
+  color: #fff;
+  vertical-align: middle;
+}
+
+.comparar__letra--A {
+  background: var(--graf-datos);
+}
+
+.comparar__letra--B {
+  background: var(--acento);
+  color: var(--sobre-acento);
+}
+
+.comparar__nota {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--error);
+}
+
+.comparar__resultado {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.comparar__resultado .comparacion th:not(:first-child),
+.comparar__resultado .comparacion td:not(:first-child) {
+  text-align: right;
+}
+
+.comparar__veredicto {
+  padding: 12px 16px;
+  background: var(--resaltador);
+  font-size: 14.5px;
+  color: var(--texto);
+}
+
+.comparar__veredicto b {
+  margin: 0 2px;
+}
+
+.comparar__grafica .medidas__titulo {
+  margin-bottom: 8px;
+}
+
+.comparar__ia {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.comparar__texto {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  padding: 16px 18px;
+  border: 2px dashed color-mix(in srgb, var(--acento-2) 45%, var(--borde));
+  border-radius: var(--radio-m);
+}
+
+/* --- Tallo y hoja ------------------------------------------------------------------- */
+
+.tallo__diagrama {
+  display: flex;
+  flex-direction: column;
+  font-size: 15px;
+}
+
+.tallo__fila {
+  position: relative;
+  display: grid;
+  grid-template-columns: 64px 1fr 40px;
+  align-items: center;
+  min-height: 30px;
+  border-bottom: 1px solid var(--borde);
+}
+
+.tallo__tallo {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 14px;
+  border-right: 2px solid var(--margen);
+  font-weight: 600;
+  color: var(--acento-texto);
+}
+
+.tallo__hojas {
+  position: relative;
+  z-index: 1;
+  padding-left: 14px;
+  letter-spacing: 0.18em;
+  overflow-wrap: anywhere;
+}
+
+.tallo__cuenta {
+  position: relative;
+  z-index: 1;
+  font-size: 12px;
+  text-align: right;
+  color: var(--texto-3);
+}
+
+/* Barra tenue detrás de las hojas: el diagrama también se lee como un histograma acostado */
+.tallo__barra {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  left: 64px;
+  max-width: calc(100% - 104px);
+  background: color-mix(in srgb, var(--graf-datos) 12%, transparent);
+  pointer-events: none;
+}
+
+.tallo__clave {
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--texto-3);
+}
+
+/* --- Notificación flotante ---------------------------------------------------------- */
+
+.notificacion {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  z-index: 60;
+  max-width: calc(100% - 32px);
+  padding: 10px 18px;
+  border: var(--trazo) solid var(--tinta);
+  border-radius: var(--radio-m);
+  background: var(--resaltador);
+  box-shadow: var(--sombra-2);
+  font-size: 13.5px;
+  font-weight: 550;
+  color: var(--texto);
+  transform: translateX(-50%);
+}
+
+/* Muchas vistas de gráfica: el selector se desplaza en vez de desbordar la tarjeta.
+   min-width: 0 es necesario porque un hijo de flex no se encoge por debajo de su contenido. */
+.tarjeta__acciones {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.tarjeta__acciones .segmentado {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.segmentado__opcion {
+  flex-shrink: 0;
+  white-space: nowrap;
 }

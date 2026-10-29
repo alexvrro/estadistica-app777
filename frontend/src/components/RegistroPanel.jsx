@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Tarjeta, { Aviso, Boton } from './Tarjeta';
 import { api } from '../api/cliente';
-import { num } from '../utils/formato';
+import { formatearFecha, num } from '../utils/formato';
 import { conMacron } from './Simbolo';
 
 /**
@@ -102,7 +102,7 @@ export default function RegistroPanel({ payload, contexto, onCambio, onAbrir }) 
               {lista.map((r) => (
                 <tr key={r.id}>
                   <td className="num">{r.id}</td>
-                  <td className="num">{r.creado_en}</td>
+                  <td className="num">{formatearFecha(r.creado_en)}</td>
                   <td>{r.variable || '—'}</td>
                   <td className="num">{r.n}</td>
                   <td className="num">{num(r.media, 2)}</td>

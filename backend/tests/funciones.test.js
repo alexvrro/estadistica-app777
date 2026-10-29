@@ -1,13 +1,12 @@
 /**
- * Pruebas del modo práctica, el chat del tutor (modo local) y la comparación.
+ * Pruebas del modo práctica, la comparación y las utilidades de IA.
  * Ejecutar: npm test
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { analizar } = require('../src/services/estadistica.service');
 const { normalizarIntento, resumirProgreso } = require('../src/services/practica.service');
-const { respuestaLocal, comparacionLocal, resumirResultados } = require('../src/services/ia.service');
-const { normalizarMensajes } = require('../src/controllers/estadistica.controller');
+const { comparacionLocal, resumirResultados, reintentarSiEsTemporal, limpiarLatex } = require('../src/services/ia.service');
 const { MUESTRA_EJEMPLO } = require('../src/data/muestra');
 
 test('normalizarIntento cuenta aciertos e ignora medidas desconocidas', () => {
@@ -35,21 +34,36 @@ test('resumirProgreso: porcentajes por medida y racha perfecta', () => {
   assert.equal(resumirProgreso([]).porcentaje, null);
 });
 
-test('chat en modo local: reconoce la medida aunque otra palabra la contenga', () => {
-  const r = analizar(MUESTRA_EJEMPLO, {});
-  assert.match(respuestaLocal(r, '¿Cómo se calcula la mediana?'), /\*\*Mediana = /);
-  assert.match(respuestaLocal(r, 'explícame la media'), /\*\*Media aritmética = 52\.35/);
-  // «asimétrica» contiene «ric», pero debe responder sobre la asimetría
-  assert.match(respuestaLocal(r, '¿Es asimétrica?'), /Asimetría de Pearson/);
-  assert.match(respuestaLocal(r, '¿cuánto vale el RIC?'), /Rango intercuartil/);
-  assert.match(respuestaLocal(r, 'hola'), /Puedo explicarte/);
+test('IA: reintenta una vez los errores temporales, pero no los demás', async () => {
+  let llamadas = 0;
+  const saturado = async () => {
+    llamadas += 1;
+    if (llamadas === 1) throw new Error('Gemini 503: high demand');
+    return 'ok';
+  };
+  assert.equal(await reintentarSiEsTemporal(saturado, 0), 'ok');
+  assert.equal(llamadas, 2);
+
+  let otras = 0;
+  const claveMala = async () => {
+    otras += 1;
+    throw new Error('Gemini 400: API key not valid');
+  };
+  await assert.rejects(reintentarSiEsTemporal(claveMala, 0), /400/);
+  assert.equal(otras, 1);
 });
 
-test('normalizarMensajes exige que la última sea una pregunta del usuario', () => {
-  const m = normalizarMensajes([{ rol: 'tutor', texto: 'hola' }, { rol: 'usuario', texto: '  ¿y la moda?  ' }]);
-  assert.deepEqual(m, [{ rol: 'usuario', texto: '¿y la moda?' }]);
-  assert.throws(() => normalizarMensajes([{ rol: 'usuario', texto: 'a' }, { rol: 'tutor', texto: 'b' }]), /pregunta/);
-  assert.throws(() => normalizarMensajes([]), /al menos una/);
+test('limpiarLatex convierte las fórmulas de Gemini a texto plano', () => {
+  // Fragmentos reales devueltos por Gemini
+  assert.equal(limpiarLatex('con la fórmula $n / 2$:'), 'con la fórmula n / 2:');
+  assert.equal(limpiarLatex('$$\\text{Posición} = \\frac{40}{2} = 20$$'), 'Posición = 40/2 = 20');
+  assert.equal(limpiarLatex('($g_2 = -0.7513$)'), '(g2 = -0.7513)');
+  assert.equal(limpiarLatex('$52.35\\text{ ms}$'), '52.35 ms');
+  assert.equal(limpiarLatex('$\\bar{x} = \\frac{\\sum x_i f_i}{n}$'), 'x̄ = (Σ xi fi)/n');
+  assert.equal(limpiarLatex('$s = \\sqrt{67.36} \\approx 8.21$ y $s^2$'), 's = √(67.36) ≈ 8.21 y s²');
+  assert.equal(limpiarLatex('$L_i + \\left(\\frac{n/2 - F_{i-1}}{f_i}\\right) \\cdot A$'), 'Li + ((n/2 - Fi-1)/fi) · A');
+  // Sin LaTeX no cambia nada
+  assert.equal(limpiarLatex('La **media** es 52.35 (CV = 15.68 %).'), 'La **media** es 52.35 (CV = 15.68 %).');
 });
 
 test('comparación local: la muestra con menor CV es la más homogénea', () => {

@@ -1,12 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
 import Tarjeta, { Aviso, Boton } from './Tarjeta';
 import { api } from '../api/cliente';
+import { formatearFecha } from '../utils/formato';
 
 const ETIQUETAS = {
   ANALISIS: { texto: 'Análisis', clase: 'operacion--analisis' },
   INTERPRETACION: { texto: 'Interpretación IA', clase: 'operacion--interpretacion' },
   GUARDAR_REGISTRO: { texto: 'Guardar registro', clase: 'operacion--guardar' },
   ELIMINAR_REGISTRO: { texto: 'Eliminar registro', clase: 'operacion--eliminar' },
+  PRACTICA: { texto: 'Práctica', clase: 'operacion--guardar' },
+  REINICIAR_PRACTICAS: { texto: 'Reiniciar progreso', clase: 'operacion--eliminar' },
+  CHAT_TUTOR: { texto: 'Pregunta al tutor', clase: 'operacion--interpretacion' },
+  COMPARACION: { texto: 'Comparación', clase: 'operacion--analisis' },
 };
 
 /**
@@ -90,11 +95,4 @@ export default function HistorialPanel({ version }) {
       )}
     </Tarjeta>
   );
-}
-
-/** MySQL devuelve la fecha en UTC; se muestra en la hora local del navegador. */
-function formatearFecha(f) {
-  if (!f) return '—';
-  const d = new Date(f);
-  return Number.isNaN(d.getTime()) ? String(f) : d.toLocaleString('es-MX');
 }

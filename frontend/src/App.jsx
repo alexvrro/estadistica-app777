@@ -7,11 +7,13 @@ import ResumenParametros from './components/ResumenParametros';
 import TablaFrecuencias from './components/TablaFrecuencias';
 import GraficaDistribucion from './components/GraficaDistribucion';
 import PanelMedidas from './components/PanelMedidas';
-import TutorIA from './components/TutorIA';
 import RegistroPanel from './components/RegistroPanel';
 import HistorialPanel from './components/HistorialPanel';
 import PaletaComandos from './components/PaletaComandos';
 import Practica from './components/Practica';
+import Comparacion from './components/Comparacion';
+import { generarEjercicio } from './utils/generador';
+import { crearEnlace, leerEnlace } from './utils/compartir';
 
 /** Identifica un resultado (para reiniciar el modo práctica al cambiar los datos). */
 const idResultado = (r) => `${r.parametros.n}-${r.totales.xiFi}-${r.totales.xi2Fi}-${r.parametros.k}`;
@@ -36,9 +38,6 @@ export default function App() {
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
 
-  const [interpretacion, setInterpretacion] = useState(null);
-  const [cargandoIA, setCargandoIA] = useState(false);
-  const [errorIA, setErrorIA] = useState('');
   const [salud, setSalud] = useState(null);
 
   // Clase resaltada en la tabla/histograma (al pasar el mouse por una medida)
@@ -51,6 +50,13 @@ export default function App() {
   const [paleta, setPaleta] = useState(false);
   const [panelAbierto, setPanelAbierto] = useState(false); // opciones del análisis
   const [practica, setPractica] = useState(false); // oculta medidas y gráfica para practicar
+  const [ejercicio, setEjercicio] = useState(null); // ejercicio generado que se está resolviendo
+  const [notificacion, setNotificacion] = useState('');
+
+  const notificar = useCallback((texto) => {
+    setNotificacion(texto);
+    setTimeout(() => setNotificacion((n) => (n === texto ? '' : n)), 3500);
+  }, []);
 
   // Tema: 'light' | 'dark' elegido con el botón, o null para seguir al sistema
   const [tema, setTema] = useState(() => {
@@ -102,21 +108,22 @@ export default function App() {
   const exportarPDF = () => window.print();
   const alternarTema = () => setTema(oscuro ? 'light' : 'dark');
 
+  // `ops` permite calcular con opciones recién elegidas, antes de que React actualice el estado
   const construirPayload = useCallback(
-    (textoDatos = texto) => ({
+    (textoDatos = texto, ops = opciones) => ({
       datos: parsearDatos(textoDatos).validos,
-      modo: opciones.modo,
-      clases: opciones.clases || undefined,
-      amplitud: opciones.amplitud || undefined,
-      limiteInicial: opciones.limiteInicial === '' ? undefined : opciones.limiteInicial,
-      percentiles: parsearLista(opciones.percentiles),
-      deciles: parsearLista(opciones.deciles),
+      modo: ops.modo,
+      clases: ops.clases || undefined,
+      amplitud: ops.amplitud || undefined,
+      limiteInicial: ops.limiteInicial === '' ? undefined : ops.limiteInicial,
+      percentiles: parsearLista(ops.percentiles),
+      deciles: parsearLista(ops.deciles),
     }),
     [texto, opciones]
   );
 
   const calcular = useCallback(
-    async (textoDatos, origen = 'usuario') => {
+    async (textoDatos, origen = 'usuario', ops) => {
       const { invalidos } = parsearDatos(textoDatos ?? texto);
       if (invalidos.length) {
         setError(`Hay valores no numéricos: ${invalidos.slice(0, 5).join(', ')}`);
@@ -125,11 +132,11 @@ export default function App() {
       setCargando(true);
       setError('');
       try {
-        const payload = construirPayload(textoDatos ?? texto);
+        const payload = construirPayload(textoDatos ?? texto, ops);
         const r = await api.analizar({ ...payload, origen });
         setResultado(r);
         setUltimoPayload(payload);
-        setInterpretacion(null); // la interpretación anterior ya no corresponde
+        if (origen !== 'ejercicio') setEjercicio(null);
         notificarOperacion();
       } catch (e) {
         setError(e.message);
@@ -140,17 +147,38 @@ export default function App() {
     [texto, construirPayload, notificarOperacion]
   );
 
-  const generarIA = async () => {
-    setCargandoIA(true);
-    setErrorIA('');
+  /** Modo práctica: genera una muestra al azar y la calcula sin salir de la práctica. */
+  const nuevoEjercicio = useCallback(async () => {
+    const ej = generarEjercicio();
+    const t = ej.datos.join(', ');
+    // Las opciones manuales (k, A, límite) del análisis anterior podrían no servir para estos datos
+    const ops = { ...OPCIONES_INICIALES, decimales: opciones.decimales };
+    setTexto(t);
+    setOpciones(ops);
+    setContexto(ej.contexto);
+    setPractica(true);
+    await calcular(t, 'ejercicio', ops);
+    setEjercicio(ej);
+    requestAnimationFrame(() => document.getElementById('bloque-tabla')?.scrollIntoView({ behavior: 'smooth' }));
+  }, [calcular, opciones.decimales]);
+
+  const compartir = async () => {
+    const { validos } = parsearDatos(texto);
+    if (validos.length < 2) return;
+    let enlace;
     try {
-      const r = await api.interpretar({ ...construirPayload(), contexto });
-      setInterpretacion(r);
-      notificarOperacion();
-    } catch (e) {
-      setErrorIA(e.message);
-    } finally {
-      setCargandoIA(false);
+      enlace = await crearEnlace({ datos: validos, opciones: construirPayload(), contexto });
+    } catch {
+      notificar('No se pudo crear el enlace');
+      return;
+    }
+    // El enlace también queda en la barra de direcciones: sirve si el navegador bloquea el portapapeles
+    window.history.replaceState(null, '', enlace);
+    try {
+      await navigator.clipboard.writeText(enlace);
+      notificar(enlace.length > 8000 ? 'Enlace copiado (es muy largo: algunos chats podrían cortarlo)' : 'Enlace copiado: pégalo para compartir este análisis');
+    } catch {
+      notificar('El navegador no dejó copiar: copia el enlace de la barra de direcciones');
     }
   };
 
@@ -184,7 +212,6 @@ export default function App() {
       setContexto({ variable: reg.variable || '', unidad: reg.unidad || '', descripcion: '' });
       setResultado(r);
       setUltimoPayload(payload);
-      setInterpretacion(null);
       setPractica(false);
       requestAnimationFrame(() => document.getElementById('bloque-parametros')?.scrollIntoView({ behavior: 'smooth' }));
     } finally {
@@ -205,11 +232,34 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Al abrir la app: estado del backend + muestra de ejemplo
+  /** Abre un análisis recibido por enlace (#a=…). */
+  const cargarCompartido = useCallback(
+    async ({ datos, opciones: op, contexto: ctx }) => {
+      const ops = {
+        ...OPCIONES_INICIALES,
+        modo: op.modo === 'discreto' ? 'discreto' : 'continuo',
+        clases: op.clases ?? '',
+        amplitud: op.amplitud ?? '',
+        limiteInicial: op.limiteInicial ?? '',
+        percentiles: (op.percentiles || []).join(', '),
+        deciles: (op.deciles || []).join(', '),
+      };
+      const t = datos.join(', ');
+      setTexto(t);
+      setOpciones(ops);
+      setContexto({ variable: ctx.variable || '', unidad: ctx.unidad || '', descripcion: '' });
+      await calcular(t, 'automatico', ops);
+      notificar('Abriste un análisis compartido por enlace');
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
+  // Al abrir la app: estado del backend + análisis compartido (si viene en la URL) o la muestra de ejemplo
   useEffect(() => {
     api.salud().then(setSalud).catch(() => setSalud({ estado: 'caido' }));
-    cargarEjemplo();
-  }, [cargarEjemplo]);
+    leerEnlace().then((compartido) => (compartido ? cargarCompartido(compartido) : cargarEjemplo()));
+  }, [cargarEjemplo, cargarCompartido]);
 
   // Ctrl + K (o Ctrl + Shift + P) abre la paleta de comandos
   useEffect(() => {
@@ -240,8 +290,8 @@ export default function App() {
     'bloque-tabla': ['Tabla', 'tabla'],
     'bloque-medidas': ['Medidas', 'medidas'],
     'bloque-grafica': ['Gráfica', 'grafica'],
-    'bloque-tutor': ['Tutor IA', 'tutor'],
     'bloque-registro': ['Registro', 'registro'],
+    'bloque-comparar': ['Comparar', 'comparar'],
     'bloque-historial': ['Historial', 'historial'],
   };
 
@@ -253,11 +303,11 @@ export default function App() {
           ['bloque-tabla', 'Tabla de frecuencias', 'fi fr intervalos'],
           ['bloque-medidas', 'Medidas descriptivas', 'media mediana moda varianza cuartiles'],
           ['bloque-grafica', 'Gráfica de la distribución', 'histograma ojiva caja'],
-          ['bloque-tutor', 'Tutor de IA', 'gemini interpretacion'],
         ]
       : []),
     ['bloque-registro', 'Registro de análisis', 'mysql guardados'],
     ['bloque-historial', 'Historial de operaciones', 'mysql'],
+    ['bloque-comparar', 'Comparar dos análisis', 'mysql comparacion lado a lado'],
   ];
 
   const comandos = [
@@ -270,6 +320,20 @@ export default function App() {
       accion: () => setPanelAbierto((a) => !a),
     },
     { id: 'ejemplo', grupo: 'Acciones', titulo: 'Cargar ejemplo (40 datos)', palabras: 'muestra', accion: cargarEjemplo },
+    {
+      id: 'ejercicio',
+      grupo: 'Acciones',
+      titulo: 'Ejercicio nuevo (datos al azar para practicar)',
+      palabras: 'generar aleatorio practica examen dado',
+      accion: nuevoEjercicio,
+    },
+    {
+      id: 'compartir',
+      grupo: 'Exportar',
+      titulo: 'Copiar enlace para compartir este análisis',
+      palabras: 'link url enviar',
+      accion: compartir,
+    },
     {
       id: 'importar',
       grupo: 'Acciones',
@@ -313,20 +377,6 @@ export default function App() {
         irA('bloque-datos', 'entrada-datos');
       },
     },
-    ...(resultado
-      ? [
-          {
-            id: 'ia',
-            grupo: 'Acciones',
-            titulo: 'Generar interpretación con IA',
-            palabras: 'tutor gemini analisis',
-            accion: () => {
-              irA('bloque-tutor');
-              generarIA();
-            },
-          },
-        ]
-      : []),
     {
       id: 'modo',
       grupo: 'Acciones',
@@ -381,6 +431,7 @@ export default function App() {
           oscuro={oscuro}
           onTema={alternarTema}
           onExportar={resultado ? exportarPDF : undefined}
+          onCompartir={resultado ? compartir : undefined}
           salud={salud}
         />
 
@@ -472,9 +523,20 @@ export default function App() {
                 decimales={dec}
                 claseResaltada={claseResaltada}
                 setClaseResaltada={setClaseResaltada}
+                contexto={contexto}
               />
               {practica ? (
-                <Practica key={idResultado(resultado)} medidas={resultado.medidas} decimales={dec} onSalir={() => setPractica(false)} />
+                <Practica
+                  key={idResultado(resultado)}
+                  medidas={resultado.medidas}
+                  decimales={dec}
+                  n={resultado.parametros.n}
+                  ejercicio={ejercicio}
+                  mysql={Boolean(salud?.mysql?.configurada)}
+                  onSalir={() => setPractica(false)}
+                  onNuevo={nuevoEjercicio}
+                  onCambio={notificarOperacion}
+                />
               ) : (
                 <>
                   <PanelMedidas
@@ -483,16 +545,7 @@ export default function App() {
                     setClaseResaltada={setClaseResaltada}
                     onPractica={() => setPractica(true)}
                   />
-                  <div className="rejilla-grafica">
-                    <GraficaDistribucion resultado={resultado} decimales={dec} claseResaltada={claseResaltada} />
-                    <TutorIA
-                      interpretacion={interpretacion}
-                      cargando={cargandoIA}
-                      error={errorIA}
-                      onGenerar={generarIA}
-                      salud={salud}
-                    />
-                  </div>
+                  <GraficaDistribucion resultado={resultado} decimales={dec} claseResaltada={claseResaltada} />
                 </>
               )}
             </>
@@ -502,7 +555,15 @@ export default function App() {
             <RegistroPanel payload={ultimoPayload} contexto={contexto} onCambio={notificarOperacion} onAbrir={abrirRegistro} />
             <HistorialPanel version={versionHistorial} />
           </div>
+
+          <Comparacion version={versionHistorial} onCambio={notificarOperacion} />
         </main>
+
+        {notificacion && (
+          <div className="notificacion" role="status">
+            {notificacion}
+          </div>
+        )}
 
         <footer className="pie">Estadística I · hecho con lápiz, papel, Express y React ✎</footer>
       </div>

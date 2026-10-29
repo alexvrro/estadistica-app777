@@ -18,6 +18,10 @@ const RUTAS = {
   subir: 'M12 16V5M7 10l5-5 5 5M5 20h14',
   practica: 'M9 11l3 3 8-8M20 12v7H4V5h11',
   abrir: 'M14 4h6v6M20 4l-9 9M18 14v6H4V6h6',
+  dado: 'M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zM8.5 8.5h.01M15.5 8.5h.01M12 12h.01M8.5 15.5h.01M15.5 15.5h.01',
+  compartir: 'M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1',
+  comparar: 'M8 3v18M16 3v18M4 7h4M16 17h4M4 17h4M16 7h4',
+  enviar: 'M4 12l16-8-6 16-2.5-6.5z',
 };
 
 export default function Icono({ nombre, tamano = 18 }) {

@@ -18,7 +18,7 @@ export function ChipsServicios({ salud }) {
 }
 
 /** Barra superior: marca, buscador de comandos, estado, tema y pestañas de secciones. */
-export default function Encabezado({ secciones, activa, onIr, onPaleta, oscuro, onTema, onExportar, salud }) {
+export default function Encabezado({ secciones, activa, onIr, onPaleta, oscuro, onTema, onExportar, onCompartir, salud }) {
   return (
     <header className="barra-superior">
       <div className="barra-superior__fila">
@@ -42,6 +42,11 @@ export default function Encabezado({ secciones, activa, onIr, onPaleta, oscuro, 
               <Kbd>K</Kbd>
             </span>
           </button>
+          {onCompartir && (
+            <button className="boton-icono" onClick={onCompartir} aria-label="Copiar enlace para compartir este análisis" title="Copiar enlace para compartir">
+              <Icono nombre="compartir" />
+            </button>
+          )}
           {onExportar && (
             <button className="boton-icono" onClick={onExportar} aria-label="Exportar reporte a PDF" title="Exportar reporte a PDF">
               <Icono nombre="imprimir" />

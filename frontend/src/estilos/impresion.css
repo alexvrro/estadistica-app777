@@ -29,11 +29,11 @@
   .pie,
   .tarjeta__acciones,
   .medida__boton,
-  .tutor__presentacion,
-  .esqueleto,
   .aviso,
   .paleta-fondo,
-  .sin-interpretacion {
+  #bloque-comparar,
+  .practica__progreso,
+  .notificacion {
     display: none !important;
   }
 
@@ -126,21 +126,7 @@
     font-size: 17px;
   }
 
-  .rejilla-grafica {
-    grid-template-columns: 1fr;
-  }
-
-  #bloque-grafica,
-  #bloque-tutor {
+  #bloque-grafica {
     break-inside: avoid;
-  }
-
-  .tutor__texto {
-    max-height: none;
-    overflow: visible;
-  }
-
-  .md {
-    font-size: 12px;
   }
 }
